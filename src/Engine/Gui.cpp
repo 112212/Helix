@@ -1,6 +1,7 @@
 #include "Gui.hpp"
 
-Helix::he::Gui::Gui() {};
-Helix::he::Gui::~Gui() {};
-		
-void Helix::he::Gui::test() { std::cout << "hi!" << std::endl; }
+Helix::Gui::Gui() {};
+Helix::Gui::~Gui() {};
+			
+void Helix::Gui::test() { std::cout << "teeeest" << std::endl; }
+

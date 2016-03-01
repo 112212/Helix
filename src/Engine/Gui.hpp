@@ -3,9 +3,9 @@
 namespace Helix {
 	class Gui {
 		public:
-		  Gui() {};
-		  ~Gui() {};
+		  Gui();
+		  ~Gui();
 		  
-		  void test() { std::cout << "hi" << std::endl; };
+		  void test();
 	};	
 }
