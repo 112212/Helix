@@ -1,6 +1,5 @@
 #include "Engine/Engine.hpp"
 
-#include <SDL2/SDL.h>
 #include <iostream>
 
 namespace he = Helix;
@@ -15,6 +14,9 @@ int main(int argc, char* args[])
 	
 	he::Gui* something = new he::Gui();
 	something->test();
+	
+	he::Fps fps;
+	fps.init();
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
@@ -22,7 +24,7 @@ int main(int argc, char* args[])
 	}
 	else
 	{
-		window = SDL_CreateWindow("Helix demo", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		window = SDL_CreateWindow("Helix engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 		if(window == NULL)
 		{
 			std::cout << "Error creating window! " << SDL_GetError() << std::endl;
@@ -76,6 +78,8 @@ int main(int argc, char* args[])
 				SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0, 0, 0));
 
 				SDL_UpdateWindowSurface(window);
+				
+                fps.show();
 			}
 		}
 	}
