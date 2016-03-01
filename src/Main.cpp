@@ -3,7 +3,7 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 
-using namespace Helix;
+namespace he = Helix;
 
 int main(int argc, char* args[])
 {

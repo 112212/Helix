@@ -3,11 +3,4 @@
 
 #include "Gui.hpp"
 
-namespace Helix {
-	namespace he {
-		class Gui;
-	}
-	using he::Gui;
-}
-
 #endif
