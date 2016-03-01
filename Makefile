@@ -12,6 +12,7 @@ hpp :=	\
 		
 cpp := 	\
 		src/Main.cpp									\
+		src/Engine/Gui.cpp								\
 
 exe := Release/Helix
 
@@ -30,6 +31,7 @@ clean:
 make_dirs:
 	@mkdir -p $(build)
 	@mkdir -p $(build)/src
+	@mkdir -p $(build)/src/Engine/
 
 $(exe): $(obj)
 	g++ $^ -o $(exe) $(link) $(arch) -pthread 
