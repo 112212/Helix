@@ -1,6 +1,5 @@
 # Helix
 C++ game engine built on SDL and OpenGL
 
-Dependencies:
-=======
+### Dependencies
 sdl2
