@@ -39,7 +39,7 @@ int main( int argc, char* args[] )
     renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
     if ( renderer == nullptr )
     {
-		std::cout << "Failed to create renderer : " << SDL_GetError();
+        std::cout << "Failed to create renderer : " << SDL_GetError();
         return -1;
     }
     
@@ -50,62 +50,62 @@ int main( int argc, char* args[] )
     
     while( running )
     {
-		SDL_Event e;
+        SDL_Event e;
 
-		while( SDL_PollEvent( &e ) )
-		{
-			if( e.type == SDL_QUIT )
-			{
-				running = false;
-			}
-			else if( e.type == SDL_KEYDOWN )
-			{
-				switch( e.key.keysym.sym )
-				{
-					case SDLK_UP:
-						std::cout << "up" << std::endl;
-					break;
+        while( SDL_PollEvent( &e ) )
+        {
+            if( e.type == SDL_QUIT )
+            {
+                running = false;
+            }
+            else if( e.type == SDL_KEYDOWN )
+            {
+                switch( e.key.keysym.sym )
+                {
+                    case SDLK_UP:
+                        std::cout << "up" << std::endl;
+                    break;
 
-					case SDLK_DOWN:
-						std::cout << "down" << std::endl;
-					break;
+                    case SDLK_DOWN:
+                        std::cout << "down" << std::endl;
+                    break;
 
-					case SDLK_LEFT:
-						std::cout << "left" << std::endl;
-					break;
+                    case SDLK_LEFT:
+                        std::cout << "left" << std::endl;
+                    break;
 
-					case SDLK_RIGHT:
-						std::cout << "right" << std::endl;
-					break;
-					
-					case SDLK_ESCAPE:
-						running = false;
-					break;
+                    case SDLK_RIGHT:
+                        std::cout << "right" << std::endl;
+                    break;
+                    
+                    case SDLK_ESCAPE:
+                        running = false;
+                    break;
 
-					default:
-					break;
-				}
-			}
-		}
-		
-		SDL_RenderSetLogicalSize( renderer, sizeX, sizeY );
+                    default:
+                    break;
+                }
+            }
+        }
+        
+        SDL_RenderSetLogicalSize( renderer, sizeX, sizeY );
 
-		SDL_RenderClear( renderer );
+        SDL_RenderClear( renderer );
 
-		SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
+        SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
 
-		SDL_RenderFillRect( renderer, &playerPos );
+        SDL_RenderFillRect( renderer, &playerPos );
 
-		SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
-		
-		SDL_RenderPresent( renderer );
-		
-		fps.Show();
-		
-		//SDL_Delay(16); // 500 should make 2 frames per second.
-	}
-	
-	SDL_DestroyWindow( window );
-	
-	SDL_Quit();
+        SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
+        
+        SDL_RenderPresent( renderer );
+        
+        fps.Show();
+        
+        //SDL_Delay(16); // 500 should make 2 frames per second.
+    }
+    
+    SDL_DestroyWindow( window );
+    
+    SDL_Quit();
 }
