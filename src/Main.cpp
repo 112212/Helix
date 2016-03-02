@@ -39,7 +39,7 @@ int main( int argc, char* args[] )
     renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
     if ( renderer == nullptr )
     {
-        std::cout << "Failed to create renderer : " << SDL_GetError();
+		std::cout << "Failed to create renderer : " << SDL_GetError();
         return -1;
     }
     
