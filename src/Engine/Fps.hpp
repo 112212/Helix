@@ -8,15 +8,13 @@ namespace Helix {
 			Fps();
 			~Fps();
 			
-			void init();
-			void show();
+			void Init();
+			void Show(); 
 		private:
-			double interval;
+			double m_tickPrevious;
+			double m_tickCurrent;
 			
-			double tickPrevious;
-			double tickCurrent;
-			
-			uint framesCurrent;
-			uint framesElapsed;
+			uint m_framesCurrent;
+			uint m_framesElapsed;
 	};	
 }

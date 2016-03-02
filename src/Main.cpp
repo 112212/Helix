@@ -3,90 +3,109 @@
 #include <iostream>
 
 namespace he = Helix;
-
-int main(int argc, char* args[])
+ 
+int main( int argc, char* args[] )
 {
-	const int SCREEN_WIDTH = 800;
-	const int SCREEN_HEIGHT = 600;
-
-	SDL_Window* window = NULL;
-	SDL_Surface* screenSurface = NULL;
+    int posX = 100;
+    int posY = 200;
+    int sizeX = 800;
+    int sizeY = 600;
+    
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    
+    SDL_Rect playerPos;
+	playerPos.x = 20;
+	playerPos.y = 20;
+	playerPos.w = 20;
+	playerPos.h = 20;
 	
-	he::Gui* something = new he::Gui();
-	something->test();
+	//he::Gui* something = new he::Gui();
+	//something->test();
+ 
+    if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
+    {
+        std::cout << " Failed to initialize SDL : " << SDL_GetError() << std::endl;
+        return -1;
+    }
+
+    window = SDL_CreateWindow( "Helix", posX, posY, sizeX, sizeY, 0 );
+    if ( window == nullptr )
+    {
+        std::cout << "Failed to create window : " << SDL_GetError();
+        return -1;
+    }
+
+    renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
+    if ( renderer == nullptr )
+    {
+        std::cout << "Failed to create renderer : " << SDL_GetError();
+        return -1;
+    }
+    
+    he::Fps fps;
+	fps.Init();
+    
+    bool running = true;
 	
-	he::Fps fps;
-	fps.init();
-
-	if(SDL_Init(SDL_INIT_VIDEO) < 0)
+	while( running )
 	{
-		std::cout << "Error initializing SDL! " << SDL_GetError() << std::endl;
-	}
-	else
-	{
-		window = SDL_CreateWindow("Helix engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-		if(window == NULL)
+		SDL_Event e;
+		
+		while( SDL_PollEvent( &e ) )
 		{
-			std::cout << "Error creating window! " << SDL_GetError() << std::endl;
-		}
-		else
-		{
-			screenSurface = SDL_GetWindowSurface(window);
-			
-			bool quit = false;
-
-			SDL_Event e;
-
-			while(!quit)
+			if( e.type == SDL_QUIT )
 			{
-				while( SDL_PollEvent( &e ) != 0 )
+				running = false;
+			}
+			else if( e.type == SDL_KEYDOWN )
+			{
+				switch( e.key.keysym.sym )
 				{
-					if( e.type == SDL_QUIT )
-					{
-						quit = true;
-					}
-					else if( e.type == SDL_KEYDOWN )
-					{
-						switch( e.key.keysym.sym )
-						{
-							case SDLK_UP:
-								std::cout << "up" << std::endl;
-							break;
+					case SDLK_UP:
+						std::cout << "up" << std::endl;
+					break;
 
-							case SDLK_DOWN:
-								std::cout << "down" << std::endl;
-							break;
+					case SDLK_DOWN:
+						std::cout << "down" << std::endl;
+					break;
 
-							case SDLK_LEFT:
-								std::cout << "left" << std::endl;
-							break;
+					case SDLK_LEFT:
+						std::cout << "left" << std::endl;
+					break;
 
-							case SDLK_RIGHT:
-								std::cout << "right" << std::endl;
-							break;
-							
-							case SDLK_ESCAPE:
-								quit = true;
-							break;
+					case SDLK_RIGHT:
+						std::cout << "right" << std::endl;
+					break;
+					
+					case SDLK_ESCAPE:
+						running = false;
+					break;
 
-							default:
-							break;
-						}
-					}
+					default:
+					break;
 				}
-			
-				SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0, 0, 0));
-
-				SDL_UpdateWindowSurface(window);
-				
-                fps.show();
 			}
 		}
-	}
+		
+		SDL_RenderSetLogicalSize( renderer, sizeX, sizeY );
 
-	SDL_DestroyWindow(window);
+		SDL_RenderClear( renderer );
+
+		SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
+
+		SDL_RenderFillRect( renderer, &playerPos );
+
+		SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
+		
+		SDL_RenderPresent( renderer );
+		
+		fps.Show();
+		
+		//SDL_Delay(16); // 500 should make 2 frames per second.
+	}
+    
+    SDL_DestroyWindow( window );
 
 	SDL_Quit();
-
-	return 0;
 }
