@@ -50,7 +50,7 @@ int main( int argc, char* args[] )
     
     while( running )
     {
-		SDL_Event e;
+        SDL_Event e;
 
         while( SDL_PollEvent( &e ) )
         {
