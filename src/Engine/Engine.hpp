@@ -14,5 +14,6 @@
 
 #include "Fps.hpp"
 #include "Gui.hpp"
+#include "ShaderManager.hpp"
 
 #endif

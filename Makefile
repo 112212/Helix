@@ -12,8 +12,9 @@ hpp :=	\
 		
 cpp := 	\
 		src/Main.cpp									\
-		src/Engine/Gui.cpp								\
 		src/Engine/Fps.cpp								\
+		src/Engine/Gui.cpp								\
+		src/Engine/ShaderManager.cpp					\
 
 exe := Release/Helix
 
