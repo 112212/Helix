@@ -15,13 +15,13 @@ int main( int argc, char* args[] )
     SDL_Renderer* renderer;
     
     SDL_Rect playerPos;
-	playerPos.x = 20;
-	playerPos.y = 20;
-	playerPos.w = 20;
-	playerPos.h = 20;
-	
-	//he::Gui* something = new he::Gui();
-	//something->test();
+    playerPos.x = 20;
+    playerPos.y = 20;
+    playerPos.w = 20;
+    playerPos.h = 20;
+    
+    //he::Gui* something = new he::Gui();
+    //something->test();
  
     if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
     {
@@ -44,12 +44,12 @@ int main( int argc, char* args[] )
     }
     
     he::Fps fps;
-	fps.Init();
+    fps.Init();
     
     bool running = true;
-	
-	while( running )
-	{
+    
+    while( running )
+    {
 		SDL_Event e;
 		
 		while( SDL_PollEvent( &e ) )
