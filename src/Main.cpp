@@ -104,8 +104,8 @@ int main( int argc, char* args[] )
 		
 		//SDL_Delay(16); // 500 should make 2 frames per second.
 	}
-    
-    SDL_DestroyWindow( window );
-
+	
+	SDL_DestroyWindow( window );
+	
 	SDL_Quit();
 }
