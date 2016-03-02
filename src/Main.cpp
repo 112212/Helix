@@ -102,7 +102,7 @@ int main( int argc, char* args[] )
         
         fps.Show();
         
-        //SDL_Delay(16); // 500 should make 2 frames per second.
+        //SDL_Delay(16);
     }
     
     SDL_DestroyWindow( window );
