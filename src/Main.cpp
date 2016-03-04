@@ -5,7 +5,7 @@
 
 namespace he = Helix;
  
-int main( int argc, char* args[] )
+int main(int argc, char* args[])
 {
     int posX = 100;
     int posY = 200;
@@ -14,47 +14,48 @@ int main( int argc, char* args[] )
     
     SDL_Window* window;
     SDL_Renderer* renderer;
+    SDL_GLContext glContext;
+    
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    
+    SDL_GL_SetSwapInterval(1);
  
-    if ( SDL_Init( SDL_INIT_EVERYTHING ) != 0 )
+    if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         std::cout << " Failed to initialize SDL : " << SDL_GetError() << std::endl;
         return -1;
     }
 
-    window = SDL_CreateWindow( "Helix", posX, posY, sizeX, sizeY, SDL_WINDOW_OPENGL );
-    if ( window == nullptr )
+    window = SDL_CreateWindow("Helix", posX, posY, sizeX, sizeY, SDL_WINDOW_OPENGL);
+    if(window == nullptr)
     {
         std::cout << "Failed to create window : " << SDL_GetError();
         return -1;
     }
     
-    // Set our OpenGL version.
-    // SDL_GL_CONTEXT_CORE gives us only the newer version, deprecated functions are disabled
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    glContext = SDL_GL_CreateContext(window);
+    if(glContext == nullptr)
+    {
+        std::cout << "Failed to create GLContext : " << SDL_GetError();
+        return -1;
+    }
 
-    // 3.2 is part of the modern versions of OpenGL, but most video cards whould be able to run it
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-
-    // Turn on double buffering with a 24bit Z buffer.
-    // You may need to change this to 16 or 32 for your system
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    
-    SDL_GLContext mainGLContext = SDL_GL_CreateContext(window);
-    
-    // This makes our buffer swap syncronized with the monitor's vertical refresh
-    SDL_GL_SetSwapInterval(1);
-
-    // Init GLEW
-    glewExperimental = GL_TRUE; 
-    glewInit();
-
-    renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
-    if ( renderer == nullptr )
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if(renderer == nullptr)
     {
         std::cout << "Failed to create renderer : " << SDL_GetError();
         return -1;
     }
+    
+    glewExperimental = GL_TRUE; 
+    glewInit();
     
     SDL_Rect playerPos;
     playerPos.x = 20;
@@ -69,10 +70,10 @@ int main( int argc, char* args[] )
     fps.Init();
     
     he::Shader shader;
-    GLuint shaderProgram = shader.LoadShader("src/Engine/Shaders/test_01.vs", "src/Engine/Shaders/test_01.fs");
+    GLuint shaderProgram = shader.LoadShader("../src/Engine/Shaders/test_01.vs", "../src/Engine/Shaders/test_01.fs");
     
-    SDL_Surface* surface = IMG_Load( "src/Engine/Shaders/texture.jpg" );
-    SDL_Texture* texture = SDL_CreateTextureFromSurface( renderer, surface );
+    SDL_Surface* surface = IMG_Load("../src/Engine/Shaders/texture.jpg");
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -227,19 +228,19 @@ int main( int argc, char* args[] )
     
     bool running = true;
     
-    while( running )
+    while(running)
     {
         SDL_Event e;
 
-        while( SDL_PollEvent( &e ) )
+        while(SDL_PollEvent(&e))
         {
-            if( e.type == SDL_QUIT )
+            if(e.type == SDL_QUIT)
             {
                 running = false;
             }
-            else if( e.type == SDL_KEYDOWN )
+            else if(e.type == SDL_KEYDOWN)
             {
-                switch( e.key.keysym.sym )
+                switch(e.key.keysym.sym)
                 {
                     case SDLK_UP:
                         std::cout << "up" << std::endl;
@@ -267,21 +268,21 @@ int main( int argc, char* args[] )
             }
         }
         
-        SDL_RenderSetLogicalSize( renderer, sizeX, sizeY );
+        SDL_RenderSetLogicalSize(renderer, sizeX, sizeY);
 
         /*
-        SDL_RenderClear( renderer );
+        SDL_RenderClear(renderer);
 
-        SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 
-        SDL_RenderFillRect( renderer, &playerPos );
+        SDL_RenderFillRect(renderer, &playerPos);
 
-        SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         
-        SDL_RenderPresent( renderer );
+        SDL_RenderPresent(renderer);
         */
         
-        //SDL_GL_SwapWindow( window );
+        //SDL_GL_SwapWindow(window);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -316,14 +317,14 @@ int main( int argc, char* args[] )
         
         //SDL_GL_SwapWindow(window);
         
-        SDL_RenderPresent( renderer );
+        SDL_RenderPresent(renderer);
 
         fps.Show();
         
         //SDL_Delay(16);
     }
     
-    SDL_DestroyWindow( window );
+    SDL_DestroyWindow(window);
     
     SDL_Quit();
 }
