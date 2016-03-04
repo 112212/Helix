@@ -22,7 +22,8 @@ int main(int argc, char* args[])
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     
     SDL_GL_SetSwapInterval(1);
@@ -56,6 +57,13 @@ int main(int argc, char* args[])
     
     glewExperimental = GL_TRUE; 
     glewInit();
+    
+    int depthSize;
+    int stencilSize;
+    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depthSize);
+    SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencilSize);
+    
+    std::cout << "Depth buffer: " << depthSize << " Stencil buffer: " << stencilSize << std::endl;
     
     SDL_Rect playerPos;
     playerPos.x = 20;
