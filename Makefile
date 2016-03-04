@@ -16,7 +16,7 @@ cpp := 	\
 		src/Engine/Gui.cpp								\
 		src/Engine/Shader.cpp							\
 
-exe := Release/Helix
+exe := release/Helix
 
 build := build
 flags := -O2
