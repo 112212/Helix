@@ -6,6 +6,7 @@ C++ game engine built on SDL and OpenGL
 * sdl2_image
 * sdl2_mixer
 * sdl2_gfx
+* sdl2_ttf
 * libgl
 * glew
 * glm
