@@ -1,6 +1,29 @@
 # Helix
 C++ game engine built on SDL and OpenGL
 
+### Engine specs
+* GUI - in progress
+* EventManager - in progress
+* 3D skeletal animation - in progress
+ * Object motion blur - in progress
+* World camera - in progress
+* Bullet physics integration - not yet
+ *  Bullet 3D raycast picking - not yet
+* Skybox - not yet
+* Shaders
+ * Lights - not yet
+ * Shadow mapping - not yet
+ * SSAO - not yet
+ * Billboard/particles - not yet
+ * Instancing - not yet
+ * Deferred shading - not yet
+ * Silhouette detection - not yet
+ * Bloom - not yet
+ * Water shader - not yet
+* Audio system - not yet
+* Networking - not yet
+* Steamapi integration - not yet
+
 ### Dependencies
 * sdl2
 * sdl2_image
