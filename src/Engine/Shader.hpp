@@ -19,18 +19,19 @@ namespace Helix {
         public:
             Shader();
             ~Shader();
-            
-            void Initialize();
-            
+
+            void LoadShader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string shaderName);
             void UseShader(std::string shaderName);
-            void Init(SDL_Surface* surface);
+            
+            //should be removed (move code to game)
+            void Init(SDL_Surface* surface, std::string shaderName);
             void Draw(float time);
             
          private:
-            void loadShader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string shaderName);
-            
+            GLuint readShader(std::string shaderFile, GLenum shaderType);
             std::map<std::string,GLuint> m_loadedShaders;
             
+            //should be removed (move code to game)
             glm::mat4 projection;
             glm::mat4 view;
             GLint uniform_m_mvp;

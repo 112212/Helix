@@ -3,68 +3,11 @@
 namespace Helix {
     Shader::Shader() {};
     Shader::~Shader() {};
-    
-    void Shader::Initialize()
-    {
-        this->loadShader("../src/Engine/Shaders/test_01.vs", "../src/Engine/Shaders/test_01.fs", "testShader1");
-    }
-    
-    void Shader::loadShader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string shaderName)
-    {
-        // reading vertex shader
-        std::ifstream vertexShaderStream(vertexShaderFile.c_str());       
-        if(!vertexShaderStream) {
-            throw std::string("Failed to load vertex shader");
-        }
-        
-        std::stringstream vertexShaderData;
-        vertexShaderData << vertexShaderStream.rdbuf(); 
-        vertexShaderStream.close();
-        const std::string &vertexShaderString = vertexShaderData.str();
-        const char *vertexShaderSource = vertexShaderString.c_str();
-        GLint vertexShaderLength = vertexShaderString.size();
-        
-        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, (const GLchar**)&vertexShaderSource, (GLint*)&vertexShaderLength);
-        
-        // reading fragment shader
-        std::ifstream fragmentShaderStream(fragmentShaderFile.c_str());   
-        if(!fragmentShaderStream) {
-            throw std::string("Failed to load fragment shader");
-        }
-        
-        std::stringstream fragmentShaderData;
-        fragmentShaderData << fragmentShaderStream.rdbuf(); 
-        fragmentShaderStream.close();
-        const std::string &fragmentShaderString = fragmentShaderData.str();
-        const char *fragmentShaderSource = fragmentShaderString.c_str();
-        GLint fragmentShaderLength = fragmentShaderString.size();
-        
-        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, (const GLchar**)&fragmentShaderSource, (GLint*)&fragmentShaderLength);
 
-        // compiling
-        GLint compileStatus;
-        
-        glCompileShader(vertexShader);
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compileStatus);
-        
-        if(compileStatus != GL_TRUE) {
-            char buffer[512];
-            glGetShaderInfoLog(vertexShader, 512, NULL, buffer);
-            
-            throw std::string(buffer);
-        }
-        
-        glCompileShader(fragmentShader);
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compileStatus);
-        
-        if(compileStatus != GL_TRUE) {
-            char buffer[512];
-            glGetShaderInfoLog(fragmentShader, 512, NULL, buffer);
-            
-            throw std::string(buffer);
-        }
+    void Shader::LoadShader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string shaderName)
+    {
+        GLuint vertexShader = this->readShader(vertexShaderFile, GL_VERTEX_SHADER);
+        GLuint fragmentShader = this->readShader(fragmentShaderFile, GL_FRAGMENT_SHADER);
         
         // linking
         GLuint shaderProgram = glCreateProgram();
@@ -74,11 +17,48 @@ namespace Helix {
         glLinkProgram(shaderProgram); 
         
         if(!shaderProgram) {
-            throw std::string("Failed to link shader");
+            throw std::string("Failed to create shader") + shaderName;
         }
         
-        //shader was compiled and linked, now add GLuint shaderProgram to std::map
+        // shader was compiled and linked, now add GLuint shaderProgram to std::map ===> should be moved to Game
         m_loadedShaders.insert(std::pair<std::string,GLuint>(shaderName, shaderProgram));
+    }
+    
+    GLuint Shader::readShader(std::string shaderFile, GLenum shaderType)
+    {
+        // reading shader
+        std::ifstream shaderStream(shaderFile);       
+        if(!shaderStream) {
+            throw std::string("Failed to load shader file: ") + shaderFile;
+        }
+        
+        std::stringstream shaderData;
+        
+        shaderData << shaderStream.rdbuf(); 
+        shaderStream.close();
+        
+        const std::string &shaderString = shaderData.str();
+        const char *shaderSource = shaderString.c_str();
+        GLint shaderLength = shaderString.size();
+        
+        // creating shader
+        GLuint shader = glCreateShader(shaderType);
+        glShaderSource(shader, 1, (const GLchar**)&shaderSource, (GLint*)&shaderLength);
+        
+        // compiling shader
+        GLint compileStatus;
+        
+        glCompileShader(shader);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
+        
+        if(compileStatus != GL_TRUE) {
+            char buffer[512];
+            glGetShaderInfoLog(shader, 512, NULL, buffer);
+            
+            throw std::string(buffer);
+        }
+        
+        return shader;
     }
     
     void Shader::UseShader(std::string shaderName)
@@ -91,7 +71,7 @@ namespace Helix {
         }
     }
     
-    void Shader::Init(SDL_Surface* surface)
+    void Shader::Init(SDL_Surface* surface, std::string shaderName)
     {
         GLuint vao;
         glGenVertexArrays(1, &vao);
@@ -211,11 +191,11 @@ namespace Helix {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
        
-        GLint position = glGetAttribLocation(m_loadedShaders["testShader1"], "position");
+        GLint position = glGetAttribLocation(m_loadedShaders[shaderName], "position");
         glEnableVertexAttribArray(position);
         glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
-        GLint attribute_v_color = glGetAttribLocation(m_loadedShaders["testShader1"], "v_color");
+        GLint attribute_v_color = glGetAttribLocation(m_loadedShaders[shaderName], "v_color");
         glEnableVertexAttribArray(attribute_v_color);
         glVertexAttribPointer(attribute_v_color, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*) (3 * sizeof(GLfloat)));
         
@@ -235,7 +215,7 @@ namespace Helix {
             GL_UNSIGNED_BYTE,
             surface->pixels);
             
-        GLint attribute_texcoord = glGetAttribLocation(m_loadedShaders["testShader1"], "texcoord");
+        GLint attribute_texcoord = glGetAttribLocation(m_loadedShaders[shaderName], "texcoord");
         glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_texcoords);
         glEnableVertexAttribArray(attribute_texcoord);
         glVertexAttribPointer(attribute_texcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -244,7 +224,7 @@ namespace Helix {
         glUniform1i(uniform_mytexture, GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture_id);
 
-        uniform_m_mvp = glGetUniformLocation(m_loadedShaders["testShader1"], "mvp");
+        uniform_m_mvp = glGetUniformLocation(m_loadedShaders[shaderName], "mvp");
         
         projection = glm::perspective(45.0f, 800.0f / 600.0f, 0.1f, 10.0f);
         view = glm::lookAt(glm::vec3(0.0, 2.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));

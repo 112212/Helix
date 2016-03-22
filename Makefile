@@ -12,6 +12,7 @@ hpp :=	\
 		
 cpp := 	\
 		src/Main.cpp									\
+		src/App.cpp										\
 		src/Engine/Fps.cpp								\
 		src/Engine/Gui.cpp								\
 		src/Engine/Shader.cpp							\

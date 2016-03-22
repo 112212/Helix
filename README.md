@@ -3,6 +3,7 @@ C++ game engine built on SDL and OpenGL
 
 ### Engine specs
 * GUI - in progress
+ * Clipboard - not yet
 * EventManager - in progress
 * 3D skeletal animation - in progress
  * Object motion blur - in progress
@@ -12,13 +13,16 @@ C++ game engine built on SDL and OpenGL
 * Skybox - not yet
 * Shaders
  * Lights - not yet
+ * Volumetric light scattering - not yet
  * Shadow mapping - not yet
- * SSAO - not yet
+ * Parallax mapping(bump) - not yet
  * Billboard/particles - not yet
  * Instancing - not yet
- * Deferred shading - not yet
  * Silhouette detection - not yet
  * Bloom - not yet
+ * HDR - not yet
+ * SSAO - not yet
+ * Deferred shading - not yet
  * Water shader - not yet
 * Audio system - not yet
 * Networking - not yet
