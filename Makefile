@@ -1,8 +1,8 @@
 #inc := -Iinclude -Isrc/Externallib
 link64bit := -Llib/linux/64bit -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_gfx -lSDL2_ttf \
-				-Wl,-rpath="../lib/linux/64bit/",-rpath="../lib/linux" -Llib/linux -lGL -lGLEW
+				-Wl,-rpath="../lib/linux/64bit/",-rpath="../lib/linux" -Llib/linux -lGL -lGLEW -lassimp
 link32bit := -Llib/linux/32bit -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_gfx -lSDL2_ttf \
-				-Wl,-rpath="../lib/linux/32bit/",-rpath="../lib/linux" -Llib/linux -lGL -lGLEW
+				-Wl,-rpath="../lib/linux/32bit/",-rpath="../lib/linux" -Llib/linux -lGL -lGLEW -lassimp
 link := $(link64bit)
 
 arch := 
@@ -16,6 +16,8 @@ cpp := 	\
 		src/Engine/Fps.cpp								\
 		src/Engine/Gui.cpp								\
 		src/Engine/Shader.cpp							\
+		src/Engine/Model.cpp							\
+		src/Engine/Mesh.cpp								\
 
 exe := release/Helix
 
@@ -42,3 +44,6 @@ $(exe): $(obj)
 
 $(build)/%.o: %.cpp
 	g++ -c $< -o $@ -std=c++11 $(inc) $(arch) -pthread $(flags)
+
+#i686-w64-mingw32-g++
+#x86_64-w64-mingw32-g++

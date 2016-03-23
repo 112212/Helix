@@ -66,15 +66,15 @@ void App::Init()
         throw std::string("Error loading image: ") + IMG_GetError();
     }
     
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    //SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     
     he::Fps fps;
     fps.Init();
     
     he::Shader shader;
+    shader.LoadShader("../src/Engine/Shaders/test_02.vs", "../src/Engine/Shaders/test_02.fs", "testShader2");
     
-    shader.LoadShader("../src/Engine/Shaders/test_01.vs", "../src/Engine/Shaders/test_01.fs", "testShader1");
-    shader.Init(surface, "testShader1");
+    he::Model pyro("../src/Models/Pyro/Pyro.obj");
     
     auto t_start = std::chrono::high_resolution_clock::now();
     
@@ -82,6 +82,8 @@ void App::Init()
     bool wireframe = true;
     
     bool running = true;
+    
+    int moveType = 0;
     
     while(running)
     {
@@ -97,18 +99,22 @@ void App::Init()
                 {
                     case SDLK_UP:
                         std::cout << "up" << std::endl;
+                        moveType = 1;
                     break;
 
                     case SDLK_DOWN:
                         std::cout << "down" << std::endl;
+                        moveType = 2;
                     break;
 
                     case SDLK_LEFT:
                         std::cout << "left" << std::endl;
+                        moveType = 3;
                     break;
 
                     case SDLK_RIGHT:
                         std::cout << "right" << std::endl;
+                        moveType = 4;
                     break;
                     
                     case SDLK_a:
@@ -172,6 +178,7 @@ void App::Init()
                     break;
 
                     default:
+                        moveType = 0;
                     break;
                 }
             }
@@ -181,8 +188,9 @@ void App::Init()
 
         auto t_now = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-   
-        shader.Draw(time);
+        
+        shader.InitPyro("testShader2", time, moveType);
+        pyro.Draw(shader.GetShader("testShader2"));
                 
         //SDL_GL_SwapWindow(window);
 

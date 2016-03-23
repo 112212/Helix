@@ -22,10 +22,10 @@ namespace Helix {
 
             void LoadShader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string shaderName);
             void UseShader(std::string shaderName);
+            GLuint GetShader(std::string shaderName);
             
             //should be removed (move code to game)
-            void Init(SDL_Surface* surface, std::string shaderName);
-            void Draw(float time);
+            void InitPyro(std::string shaderName, float time, int moveType);
             
          private:
             GLuint readShader(std::string shaderFile, GLenum shaderType);

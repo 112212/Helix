@@ -37,3 +37,6 @@ C++ game engine built on SDL and OpenGL
 * libgl
 * glew
 * glm
+
+### Optional
+* mingw-w64-gcc (for crosscompile)
