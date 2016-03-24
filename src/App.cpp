@@ -1,14 +1,26 @@
 #include "App.hpp"
 
-#include <iostream>
-#include <chrono>
-
 namespace he = Helix;
 
-App::App() {};
-App::~App() {};
+App::App()
+{
+    m_ticks_previous = SDL_GetTicks();
+    m_ticks_current = 0;
+    m_frames_current = 0;
+    m_frames_elapsed = 0;
+    
+    m_delta_time = 0;
+    m_ticks_then = 0;
 
-void App::Init()
+    m_chrono_start = std::chrono::high_resolution_clock::now();
+    m_chrono_elapsed = 0;
+    
+    this->init();
+}
+
+App::~App() {}
+
+void App::init()
 {
     int sizeX = 800;
     int sizeY = 600;
@@ -69,14 +81,12 @@ void App::Init()
     SDL_SetRelativeMouseMode(SDL_TRUE);
     
     float mouseScroll = 0.0;
-    
-    he::Fps fps;
-    
+
     he::Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
     
-    he::Shader pyroShader("../src/Engine/Shaders/test_02.vs", "../src/Engine/Shaders/test_02.fs", "pyroShader");
+    he::Shader pyroShader("../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs", "pyroShader");
     
-    he::Model pyroModel("../src/Assets/Models/Pyro/Pyro.obj");
+    he::Model pyroModel("../Assets/Models/Pyro/Pyro.obj");
     
     SDL_Rect cursorRect;
     cursorRect.x = (sizeX / 2) - 8;
@@ -84,15 +94,13 @@ void App::Init()
     cursorRect.w = 17;
     cursorRect.h = 17;
     
-    SDL_Surface* cursorSurface = IMG_Load("../src/Assets/Images/cursor_crosshair.png");
+    SDL_Surface* cursorSurface = IMG_Load("../Assets/Images/cursor_crosshair.png");
     if(!cursorSurface) {
         throw std::string("Error loading image: ") + IMG_GetError();
     }
 
     //moving this up he::Model is causing the texture bug? some texture binds error?
     SDL_Texture* cursorTexture = SDL_CreateTextureFromSurface(renderer, cursorSurface);
-
-    auto t_start = std::chrono::high_resolution_clock::now();
     
     bool fullscreen = true;
     bool wireframe = true;
@@ -101,7 +109,7 @@ void App::Init()
 
     while(running)
     {
-        double dt = fps.GetDeltaTime();
+        this->loop();
 
         SDL_Event e;
 
@@ -153,14 +161,15 @@ void App::Init()
                             sizeX = 1366;
                             sizeY = 768;
                             fullscreen = false;
-                            //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-                            SDL_WarpMouseGlobal(sizeX / 2, sizeY / 2);
+                            //SDL_WarpMouseGlobal(1366 / 2, 768 / 2);
                         }
                         else {
                             SDL_SetWindowFullscreen(window, 0);
+                            SDL_SetWindowDisplayMode(window, 0);
                             sizeX = 800;
                             sizeY = 600;
                             fullscreen = true;
+                            //SDL_WarpMouseGlobal(1366 / 2, 768 / 2);
                         }
                     }
                     break;
@@ -212,19 +221,19 @@ void App::Init()
         const Uint8 *state = SDL_GetKeyboardState(NULL);
         
         if (state[SDL_SCANCODE_W]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::FORWARD, dt * 2.0);
+            camera.ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
         }
         
         if (state[SDL_SCANCODE_S]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, dt * 2.0);
+            camera.ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
         }
         
         if (state[SDL_SCANCODE_A]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::LEFT, dt * 2.0);
+            camera.ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
         }
         
         if (state[SDL_SCANCODE_D]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::RIGHT, dt * 2.0);
+            camera.ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
         }
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -243,25 +252,64 @@ void App::Init()
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), sizeX/(float)sizeY, 0.1f, 1000.0f);
         
-        auto t_now = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
         
         glUseProgram(pyroShader.GetShader("pyroShader"));
         //remove argument [ pyroShader.GetShader(); ] ?
-        pyroShader.InitPyro("pyroShader", time, view, projection);
+        
+        pyroShader.InitPyro("pyroShader", this->getTimeElapsed(), view, projection);
         pyroModel.Draw(pyroShader.GetShader("pyroShader"));
-        glUseProgram(0);
+        glUseProgram(0);       
         
         SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         
         SDL_RenderPresent(renderer);
+
+        this->showFPS();
         
-        fps.Show();
-        
-        //SDL_Delay(16.0f - dt);
+        //SDL_Delay(16);
     }
     
     SDL_DestroyWindow(window);
     
     SDL_Quit();
+}
+
+void App::loop()
+{
+    // fps
+    m_frames_elapsed++;
+    m_ticks_current = SDL_GetTicks();
+    
+    // delta time
+    m_delta_time = (m_ticks_current - m_ticks_then) / 1000.0f;
+    m_ticks_then = m_ticks_current;
+
+    // time elapsed
+    auto m_chrono_now = std::chrono::high_resolution_clock::now();
+    m_chrono_elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(m_chrono_now - m_chrono_start).count();
+}
+
+void App::showFPS()
+{
+    if(m_ticks_previous < m_ticks_current - 1000) {
+        m_ticks_previous = SDL_GetTicks();
+        m_frames_current = m_frames_elapsed;
+        m_frames_elapsed = 0;
+        
+        if(m_frames_current < 1) {
+            m_frames_current = 1;
+        }
+        
+        std::cout << "FPS: " << m_frames_current << std::endl;
+    }
+}
+
+double App::getDeltaTime()
+{ 
+    return m_delta_time;
+}
+
+double App::getTimeElapsed()
+{
+    return m_chrono_elapsed;
 }

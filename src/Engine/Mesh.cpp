@@ -20,7 +20,6 @@ namespace Helix {
         GLuint specularNr = 1;
         for(GLuint i = 0; i < m_textures.size(); i++)
         {
-            
             // Retrieve texture number (the N in texture_diffuseN)
             std::stringstream ss;
             std::string number;

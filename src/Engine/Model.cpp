@@ -126,10 +126,7 @@ namespace Helix {
     GLint Model::textureFromFile(std::string path)
     {
         std::string filename = m_directory + '/' + path;
-        
-        GLuint textureID;
-        glGenTextures(1, &textureID);
-        
+ 
         SDL_Surface* image = IMG_Load(filename.c_str());
         if(!image) {
             throw std::string("Error loading image: ") + IMG_GetError();
@@ -155,15 +152,20 @@ namespace Helix {
         else {
              throw std::string("Image is not truecolor!");
         }
-
+        
+        GLuint textureID;
+        glGenTextures(1, &textureID);
+        
         glBindTexture(GL_TEXTURE_2D, textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, image->format->BytesPerPixel, image->w, image->h, 0, colorMode, GL_UNSIGNED_BYTE, image->pixels);
-        glGenerateMipmap(GL_TEXTURE_2D);    
-
+        glGenerateMipmap(GL_TEXTURE_2D);   
+        
+         
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
         glBindTexture(GL_TEXTURE_2D, 0);
         
         SDL_FreeSurface(image);

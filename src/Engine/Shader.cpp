@@ -92,10 +92,10 @@ namespace Helix {
         return m_loadedShaders[shaderName];
     }
     
-    void Shader::InitPyro(std::string shaderName, float time, glm::mat4 view, glm::mat4 projection)
+    void Shader::InitPyro(std::string shaderName, float time, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
     {
         glEnable(GL_DEPTH_TEST);
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
         //glEnable(GL_MULTISAMPLE);
         
         //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -123,7 +123,7 @@ namespace Helix {
         //glm::mat4 projection = glm::perspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
         
         glm::mat4 model;
-        model = glm::translate(model, glm::vec3(0.0f, -2.0f, -2.0f));
+        model = glm::translate(model, glm::vec3(posX, posY, posZ));
         model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         
         GLint modelLoc = glGetUniformLocation(m_loadedShaders[shaderName], "model");
