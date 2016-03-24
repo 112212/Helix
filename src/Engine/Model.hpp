@@ -8,7 +8,6 @@
 #include <vector>
 
 //remove sdl and move sdl surface image to shaders?
-#include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
 #include <glm/glm.hpp>
@@ -33,11 +32,12 @@ namespace Helix {
             void loadModel(std::string path);
             void processNode(aiNode* node, const aiScene* scene);
             Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-            std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
+            std::vector<Mesh::Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
             GLint textureFromFile(std::string path);
         
-            std::vector<Texture> textures_loaded; 
-            std::vector<Mesh> meshes;
-            std::string directory;
+            std::vector<Mesh::Texture> m_textures_loaded; 
+            std::vector<Mesh> m_meshes;
+            
+            std::string m_directory;
     };
 }

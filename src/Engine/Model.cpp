@@ -1,19 +1,14 @@
 #include "Model.hpp"
 
 namespace Helix {
-    Model::Model() {};
+    Model::Model() {}
+    
     Model::Model(std::string fileName)
     {
         this->loadModel(fileName);
-    };
-    Model::~Model() {};
-    
-    void Model::Draw(GLuint shader)
-    {
-        for(GLuint i = 0; i < this->meshes.size(); i++) {
-            this->meshes[i].Draw(shader);
-        }
     }
+    
+    Model::~Model() {}
     
     void Model::loadModel(std::string path)
     {
@@ -24,7 +19,8 @@ namespace Helix {
             throw std::string("Assimp error: ") + importer.GetErrorString();
         }
 
-        this->directory = path.substr(0, path.find_last_of('/'));
+        m_directory = path.substr(0, path.find_last_of('/'));
+        
         this->processNode(scene->mRootNode, scene);
     }
     
@@ -32,7 +28,7 @@ namespace Helix {
     {
         for(GLuint i = 0; i < node->mNumMeshes; i++) {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]]; 
-            this->meshes.push_back(this->processMesh(mesh, scene));         
+            m_meshes.push_back(this->processMesh(mesh, scene));         
         }
 
         for(GLuint i = 0; i < node->mNumChildren; i++) {
@@ -42,12 +38,12 @@ namespace Helix {
     
     Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
     {
-        std::vector<Vertex> vertices;
+        std::vector<Mesh::Vertex> vertices;
         std::vector<GLuint> indices;
-        std::vector<Texture> textures;
+        std::vector<Mesh::Texture> textures;
 
         for(GLuint i = 0; i < mesh->mNumVertices; i++) {
-            Vertex vertex;
+            Mesh::Vertex vertex;
             glm::vec3 vector;
 
             vector.x = mesh->mVertices[i].x;
@@ -85,28 +81,28 @@ namespace Helix {
         if(mesh->mMaterialIndex >= 0) {
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-            std::vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+            std::vector<Mesh::Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-            std::vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+            std::vector<Mesh::Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
         }
         
         return Mesh(vertices, indices, textures);
     }
     
-    std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
+    std::vector<Mesh::Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
     {
-        std::vector<Texture> textures;
+        std::vector<Mesh::Texture> textures;
         for(GLuint i = 0; i < mat->GetTextureCount(type); i++)
         {
             aiString str;
             mat->GetTexture(type, i, &str);
-            GLboolean skip = false;
+            bool skip = false;
             
-            for(GLuint j = 0; j < textures_loaded.size(); j++) {
-                if(textures_loaded[j].path == str) {
-                    textures.push_back(textures_loaded[j]);
+            for(GLuint j = 0; j < m_textures_loaded.size(); j++) {
+                if(m_textures_loaded[j].path == str) {
+                    textures.push_back(m_textures_loaded[j]);
                     skip = true; 
                     break;
                 }
@@ -114,12 +110,13 @@ namespace Helix {
             
             // load texture, if was not loaded yet
             if(!skip) {
-                Texture texture;
+                Mesh::Texture texture;
                 texture.id = textureFromFile(str.C_Str());
                 texture.type = typeName;
                 texture.path = str;
+                
                 textures.push_back(texture);
-                this->textures_loaded.push_back(texture);
+                m_textures_loaded.push_back(texture);
             }
         }
         
@@ -128,7 +125,7 @@ namespace Helix {
     
     GLint Model::textureFromFile(std::string path)
     {
-        std::string filename = this->directory + '/' + path;
+        std::string filename = m_directory + '/' + path;
         
         GLuint textureID;
         glGenTextures(1, &textureID);
@@ -172,6 +169,13 @@ namespace Helix {
         SDL_FreeSurface(image);
         
         return textureID;
+    }
+    
+    void Model::Draw(GLuint shader)
+    {
+        for(GLuint i = 0; i < m_meshes.size(); i++) {
+            m_meshes[i].Draw(shader);
+        }
     }
 }
 

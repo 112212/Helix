@@ -8,13 +8,17 @@ namespace Helix {
             Fps();
             ~Fps();
             
-            void Init();
             void Show(); 
+            double GetDeltaTime();
         private:
             double m_tickPrevious;
             double m_tickCurrent;
             
             uint m_framesCurrent;
             uint m_framesElapsed;
+            
+            float deltaTime;
+            int thisTime;
+            int lastTime;
     };  
 }

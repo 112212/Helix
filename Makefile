@@ -18,6 +18,7 @@ cpp := 	\
 		src/Engine/Shader.cpp							\
 		src/Engine/Model.cpp							\
 		src/Engine/Mesh.cpp								\
+		src/Engine/Camera.cpp							\
 
 exe := release/Helix
 

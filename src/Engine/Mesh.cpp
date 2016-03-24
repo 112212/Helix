@@ -1,28 +1,30 @@
 #include "Mesh.hpp"
 
 namespace Helix {
-    Mesh::Mesh() {};
+    Mesh::Mesh() {}
+    
     Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vector<Texture>& textures)
     {
-        this->vertices = vertices;
-        this->indices = indices;
-        this->textures = textures;
+        m_vertices = vertices;
+        m_indices = indices;
+        m_textures = textures;
 
         this->setupMesh();
     }
-    Mesh::~Mesh() {};
+    
+    Mesh::~Mesh() {}
     
     void Mesh::Draw(GLuint shader) 
     {
         GLuint diffuseNr = 1;
         GLuint specularNr = 1;
-        for(GLuint i = 0; i < this->textures.size(); i++)
+        for(GLuint i = 0; i < m_textures.size(); i++)
         {
             
             // Retrieve texture number (the N in texture_diffuseN)
             std::stringstream ss;
             std::string number;
-            std::string name = this->textures[i].type;
+            std::string name = m_textures[i].type;
             if(name == "texture_diffuse") {
                 ss << diffuseNr++;
             }
@@ -33,14 +35,14 @@ namespace Helix {
             
             glActiveTexture(GL_TEXTURE0 + i);
             glUniform1i(glGetUniformLocation(shader, (name + number).c_str()), i);
-            glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
+            glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
         }
         
-        glBindVertexArray(this->VAO);
-        glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(m_VAO);
+        glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
-        for (GLuint i = 0; i < this->textures.size(); i++) {
+        for (GLuint i = 0; i < m_textures.size(); i++) {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
@@ -48,17 +50,17 @@ namespace Helix {
     
     void Mesh::setupMesh()
     {
-        glGenVertexArrays(1, &this->VAO);
-        glGenBuffers(1, &this->VBO);
-        glGenBuffers(1, &this->EBO);
+        glGenVertexArrays(1, &m_VAO);
+        glGenBuffers(1, &m_VBO);
+        glGenBuffers(1, &m_EBO);
 
-        glBindVertexArray(this->VAO);
+        glBindVertexArray(m_VAO);
         
-        glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-        glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW); //struct sequential memory layout
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex), &m_vertices[0], GL_STATIC_DRAW); //struct sequential memory layout
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint), &this->indices[0], GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLuint), &m_indices[0], GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);   
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);

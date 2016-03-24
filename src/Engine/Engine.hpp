@@ -14,3 +14,4 @@
 #include "Gui.hpp"
 #include "Shader.hpp"
 #include "Model.hpp"
+#include "Camera.hpp"

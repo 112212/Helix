@@ -8,12 +8,13 @@ out vec4 color;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
+uniform vec3 lightColor;
 
 uniform sampler2D texture_diffuse1;
 
+uniform float ambientStr;
+
 void main() {
-    //vec3 lightColor = vec3(1.0f, 0.5f, 1.0f);
-    
     float ambientStrength = 0.5f;
     vec3 ambient = ambientStrength * vec3(texture(texture_diffuse1, TexCoords));
 
