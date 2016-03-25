@@ -29,6 +29,7 @@ void App::init()
     SDL_Renderer* renderer;
     //SDL_GLContext glContext;
  
+ 
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         throw std::string("Failed to initialize SDL: ") + SDL_GetError();
     }
