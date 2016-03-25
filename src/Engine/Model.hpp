@@ -38,6 +38,8 @@ namespace Helix {
             std::vector<Mesh::Texture> m_textures_loaded; 
             std::vector<Mesh> m_meshes;
             
+            aiMatrix4x4t<float> m_GlobalInverseTransform;
+            
             std::string m_directory;
     };
 }

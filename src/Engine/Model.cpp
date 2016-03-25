@@ -13,13 +13,16 @@ namespace Helix {
     void Model::loadModel(std::string path)
     {
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+        const aiScene* scene = importer.ReadFile(path, aiProcess_ImproveCacheLocality | aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals);
 
         if(!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
             throw std::string("Assimp error: ") + importer.GetErrorString();
         }
 
         m_directory = path.substr(0, path.find_last_of('/'));
+        
+        m_GlobalInverseTransform = scene->mRootNode->mTransformation;
+        m_GlobalInverseTransform.Inverse();
         
         this->processNode(scene->mRootNode, scene);
     }
@@ -41,6 +44,10 @@ namespace Helix {
         std::vector<Mesh::Vertex> vertices;
         std::vector<GLuint> indices;
         std::vector<Mesh::Texture> textures;
+        
+        if(!mesh->HasNormals()) {
+            throw std::string("Loading model failed! Missing normals. Try adding flag: aiProcess_GenNormals or aiProcess_GenSmoothNormals");
+        }
 
         for(GLuint i = 0; i < mesh->mNumVertices; i++) {
             Mesh::Vertex vertex;
@@ -55,7 +62,7 @@ namespace Helix {
             vector.y = mesh->mNormals[i].y;
             vector.z = mesh->mNormals[i].z;
             vertex.Normal = vector;
-            
+
             // Does the mesh contain texture coordinates?
             if(mesh->mTextureCoords[0]) {
                 glm::vec2 vec;
