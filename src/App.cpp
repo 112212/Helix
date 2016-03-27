@@ -4,6 +4,9 @@ namespace he = Helix;
 
 App::App()
 {
+    m_sizeX = 800;
+    m_sizeY = 600;
+    
     m_ticks_previous = SDL_GetTicks();
     m_ticks_current = 0;
     m_frames_current = 0;
@@ -22,23 +25,24 @@ App::~App() {}
 
 void App::init()
 {
-    int sizeX = 800;
-    int sizeY = 600;
-    
     SDL_Window* window;
     SDL_Renderer* renderer;
-    //SDL_GLContext glContext;
- 
  
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         throw std::string("Failed to initialize SDL: ") + SDL_GetError();
     }
 
-    window = SDL_CreateWindow("Helix", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, sizeX, sizeY, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow("Helix", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, this->getSizeX(), this->getSizeY(), SDL_WINDOW_OPENGL);
     if(window == nullptr) {
         throw std::string("Failed to create window: ") + SDL_GetError();
     }
     
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if(renderer == nullptr) {
+        throw std::string("Failed to create renderer: ") + SDL_GetError();
+    }
+    
+    /*
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -52,18 +56,12 @@ void App::init()
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
     SDL_GL_SetSwapInterval(1);
     
-    /*
     SDL_GLContext glContext;
     glContext = SDL_GL_CreateContext(window);
     if(glContext == nullptr) {
         throw std::string("Failed to create GLContext: ") + SDL_GetError();
     }
     */
-    
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if(renderer == nullptr) {
-        throw std::string("Failed to create renderer: ") + SDL_GetError();
-    }
     
     //SDL_GL_MakeCurrent(window, glContext);
     
@@ -74,29 +72,28 @@ void App::init()
     printf("Renderer: %s\n", glGetString(GL_RENDERER));
     printf("Version:  %s\n", glGetString(GL_VERSION));
     printf("GLSL:  %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-
     
-    /*
+    
     int depthSize;
     int stencilSize;
     SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depthSize);
     SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencilSize);
     std::cout << "Depth buffer: " << depthSize << " Stencil buffer: " << stencilSize << std::endl;
-    */
 
     //SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-    //SDL_WarpMouseInWindow(window, sizeX / 2, sizeY / 2);
+    //SDL_WarpMouseInWindow(window, this->getSizeX() / 2, this->getSizeY() / 2);
     //SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
     //SDL_SetWindowGrab(window, SDL_TRUE);
     //SDL_ShowCursor(SDL_ENABLE);
 
     SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
     SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetWindowGrab(window, SDL_TRUE);
     
     float mouseScroll = 0.0;
 
     he::Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-    
+
     he::Shader pyroShader("pyroShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
     he::Shader bobShader("bobShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
        
@@ -104,8 +101,8 @@ void App::init()
     he::Model bobModel("../Assets/Models/guard/boblampclean.md5mesh");
 
     SDL_Rect cursorRect;
-    cursorRect.x = (sizeX / 2) - 8;
-    cursorRect.y = (sizeY / 2) - 8;
+    cursorRect.x = (this->getSizeX() / 2) - 8;
+    cursorRect.y = (this->getSizeY() / 2) - 8;
     cursorRect.w = 17;
     cursorRect.h = 17;
     
@@ -119,6 +116,7 @@ void App::init()
 
     SDL_FreeSurface(cursorSurface);
     
+    bool mouserelative = true;
     bool fullscreen = true;
     bool wireframe = true;
     
@@ -142,6 +140,7 @@ void App::init()
                 {
                     case SDLK_UP:
                         std::cout << "up" << std::endl;
+                        //camera.ToggleLockY();
                     break;
                     
                     case SDLK_q:
@@ -179,25 +178,37 @@ void App::init()
                             
                             int w, h;
                             SDL_GetRendererOutputSize(renderer, &w, &h);
-                            sizeX = w;
-                            sizeY = h;
-                            fullscreen = false;
+                            this->setSizeX(w);
+                            this->setSizeY(h);
                             
-                            std::cout << sizeX << "x" << sizeY << std::endl;
+                            fullscreen = false;
                         }
                         else {
                             SDL_SetWindowFullscreen(window, 0);
                             //SDL_SetWindowDisplayMode(window, 0);
+
+                            this->setSizeX(800);
+                            this->setSizeY(600);
                             
                             fullscreen = true;
-
-                            sizeX = 800;
-                            sizeY = 600;
-                            
-                            std::cout << sizeX << "x" << sizeY << std::endl;
                         }
                         
                         skip = 2;     
+                    }
+                    break;
+                    
+                    case SDLK_SPACE:
+                    {
+                        if(mouserelative) {
+                            SDL_SetRelativeMouseMode(SDL_FALSE);
+                            mouserelative = false;
+                        }
+                        else {
+                            SDL_SetRelativeMouseMode(SDL_TRUE);
+                            mouserelative = true;
+                        }
+
+                        skip = 2;
                     }
                     break;
                     
@@ -220,7 +231,7 @@ void App::init()
                         ss << "screenshot_" << std::time(0) << ".bmp";
                         std::string screenshotFileName = ss.str();
                         
-                        SDL_Surface* screenshotSurface = SDL_CreateRGBSurface(0, sizeX, sizeY, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+                        SDL_Surface* screenshotSurface = SDL_CreateRGBSurface(0, this->getSizeX(), this->getSizeY(), 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
                         SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, screenshotSurface->pixels, screenshotSurface->pitch);
                         SDL_SaveBMP(screenshotSurface, screenshotFileName.c_str());
                         SDL_FreeSurface(screenshotSurface);
@@ -255,7 +266,7 @@ void App::init()
             }
         }
 
-        SDL_RenderSetLogicalSize(renderer, sizeX, sizeY);
+        //SDL_RenderSetLogicalSize(renderer, this->getSizeX(), this->getSizeY());
         
         SDL_PumpEvents();
         const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -279,23 +290,36 @@ void App::init()
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         
-        cursorRect.x = (sizeX / 2) - 8;
-        cursorRect.y = (sizeY / 2) - 8;
-
+        cursorRect.x = (this->getSizeX() / 2) - 8;
+        cursorRect.y = (this->getSizeY() / 2) - 8;
+        
         int xpos;
         int ypos;
         SDL_GetRelativeMouseState(&xpos, &ypos);
-        
+
         if(skip > 0 && (xpos != 0 || ypos != 0)) {
             skip--; 
         }
         else {
-            camera.ProcessMouseMovement(xpos, ypos);
-            camera.ProcessMouseScroll(mouseScroll);
+            if(mouserelative) {
+                camera.ProcessMouseMovement(xpos, ypos);
+                camera.ProcessMouseScroll(mouseScroll);
+            }
+            else {
+                int xpos;
+                int ypos;
+                SDL_GetMouseState(&xpos, &ypos);
+                
+                //std::cout << "x: " << xpos << " y: " << ypos << std::endl;
+                
+                std::cout << "cam x: " << camera.GetPosition().x
+                          << " y: " << camera.GetPosition().y
+                          << " z: " << camera.GetPosition().z << std::endl;
+            }
         }
         
         glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), sizeX/(float)sizeY, 0.1f, 1000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
         
         glUseProgram(pyroShader.GetShader("pyroShader"));
         //remove argument [ pyroShader.GetShader(); ] ?
@@ -306,12 +330,12 @@ void App::init()
         glUseProgram(bobShader.GetShader("bobShader"));
         bobShader.InitBob("bobShader", this->getTimeElapsed(), view, projection, 4);
         bobModel.Draw(bobShader.GetShader("bobShader"));
-        glUseProgram(0);       
-
+        glUseProgram(0);    
+                  
         SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         
         //SDL_RenderPresent(renderer);
-        SDL_GL_SwapWindow(window);
+        SDL_GL_SwapWindow(window); 
 
         this->showFPS();
         
@@ -353,12 +377,32 @@ void App::showFPS()
     }
 }
 
-double App::getDeltaTime()
+int App::getSizeX() const
+{
+    return m_sizeX;
+}
+
+int App::getSizeY() const
+{
+    return m_sizeY;
+}
+
+void App::setSizeX(int sizeX)
+{
+    m_sizeX = sizeX;
+}
+
+void App::setSizeY(int sizeY)
+{
+    m_sizeY = sizeY;
+}
+
+double App::getDeltaTime() const
 { 
     return m_delta_time;
 }
 
-double App::getTimeElapsed()
+double App::getTimeElapsed() const
 {
     return m_chrono_elapsed;
 }

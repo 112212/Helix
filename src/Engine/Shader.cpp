@@ -118,10 +118,12 @@ namespace Helix {
         
         GLint lightPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightPos");
         GLint viewPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "viewPos");
-        GLint lightColorLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightColor");
+        GLint lightColorLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightColor");     
+        GLint timeLoc = glGetUniformLocation(m_loadedShaders[shaderName], "time");
         
         glUniform3f(lightPosLoc, lightPos.x * moveX, lightPos.y, lightPos.z * moveY);
-        glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);   
+        glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
+        glUniform1f(timeLoc, time);   
         
         //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f,  3.0f);
         //glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
@@ -173,9 +175,11 @@ namespace Helix {
         GLint lightPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightPos");
         GLint viewPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "viewPos");
         GLint lightColorLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightColor");
+        GLint timeLoc = glGetUniformLocation(m_loadedShaders[shaderName], "time");
         
         glUniform3f(lightPosLoc, lightPos.x * moveX, lightPos.y, lightPos.z * moveY);
-        glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);   
+        glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
+        glUniform1f(timeLoc, time); 
         
         //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f,  3.0f);
         //glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);

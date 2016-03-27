@@ -27,9 +27,10 @@ namespace Helix {
             void ProcessKeyboard(MoveDirection direction, float dt);
             void ProcessMouseMovement(float offsetX, float offsetY, bool constrainPitch = true);
             void ProcessMouseScroll(float offsetY);   
-            float GetZoom();
-            glm::mat4 GetViewMatrix();
-            glm::vec3 GetPosition();
+            float GetZoom() const;
+            glm::mat4 GetViewMatrix() const;
+            glm::vec3 GetPosition() const;
+            void ToggleLockY();
             
         private:
             void updateCameraVectors();
@@ -45,5 +46,7 @@ namespace Helix {
             float m_movement_speed;
             float m_mouse_sensitivity;
             float m_zoom;
+            
+            bool m_lock_y;
     };  
 }

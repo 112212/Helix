@@ -12,7 +12,7 @@ uniform vec3 lightColor;
 
 uniform sampler2D texture_diffuse1;
 
-uniform float ambientStr;
+uniform float time;
 
 void main() {
     float ambientStrength = 0.5f;

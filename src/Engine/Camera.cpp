@@ -16,6 +16,8 @@ namespace Helix {
         m_yaw = yaw;
         m_pitch = pitch;
         
+        m_lock_y = false;
+        
         this->updateCameraVectors();
     }
     
@@ -37,13 +39,10 @@ namespace Helix {
     
     Camera::~Camera() {}
     
-    glm::mat4 Camera::GetViewMatrix()
-    {
-        return glm::lookAt(m_position, m_position + m_front, m_up);
-    }
-    
     void Camera::ProcessKeyboard(MoveDirection direction, float dt)
     {
+        glm::vec3 lastCameraPosition = m_position;
+        
         float velocity = m_movement_speed * dt;
         
         if (direction == FORWARD) {
@@ -61,13 +60,19 @@ namespace Helix {
         if (direction == RIGHT) {
             m_position += m_right * velocity;
         }
+        
+        // disable flying, true fps camera
+        if(m_lock_y) {
+            m_position.y = lastCameraPosition.y;
+            //m_position.y = 0.0f;
+        }
     }
     
     void Camera::ProcessMouseMovement(float offsetX, float offsetY, bool constrainPitch)
     {
         offsetX *= m_mouse_sensitivity;
         offsetY *= m_mouse_sensitivity;
-
+        
         m_yaw += offsetX;
         m_pitch += -offsetY;
 
@@ -111,14 +116,29 @@ namespace Helix {
         m_up = glm::normalize(glm::cross(m_right, m_front));
     }
     
-    float Camera::GetZoom()
+    glm::mat4 Camera::GetViewMatrix() const
+    {
+        return glm::lookAt(m_position, m_position + m_front, m_up);
+    }
+    
+    float Camera::GetZoom() const
     {
         return m_zoom;
     }
     
-    glm::vec3 Camera::GetPosition()
+    glm::vec3 Camera::GetPosition() const
     {
         return m_position;
+    }
+    
+    void Camera::ToggleLockY()
+    {
+        if(m_lock_y) {
+            m_lock_y = false;
+        }
+        else {
+            m_lock_y = true;
+        }
     }
 }
 

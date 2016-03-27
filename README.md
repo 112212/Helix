@@ -7,7 +7,7 @@ C++ game engine built on SDL and OpenGL
 * EventManager - in progress
 * 3D skeletal animation - in progress
  * Object motion blur - in progress
-* World camera - in progress
+* World camera - done
 * Bullet physics integration - not yet
  *  Bullet 3D raycast picking - not yet
 * Skybox - not yet
@@ -24,6 +24,8 @@ C++ game engine built on SDL and OpenGL
  * SSAO - not yet
  * Deferred shading - not yet
  * Water shader - not yet
+ * Occlusion query/culling - not yet
+ * Billboards - not yet
 * Audio system - not yet
 * Networking - not yet
 * Steamapi integration - not yet

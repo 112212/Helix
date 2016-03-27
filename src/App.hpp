@@ -10,9 +10,16 @@ class App {
     private:
         void init();
         void loop(); 
-        void showFPS(); 
-        double getDeltaTime();
-        double getTimeElapsed();
+        void showFPS();
+        int getSizeX() const;
+        int getSizeY() const;
+        void setSizeX(int sizeX);
+        void setSizeY(int sizeY);
+        double getDeltaTime() const;
+        double getTimeElapsed() const;
+        
+        int m_sizeX;
+        int m_sizeY;
         
         int m_ticks_previous;
         int m_ticks_current;
