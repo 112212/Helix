@@ -40,10 +40,10 @@ make_dirs:
 	@mkdir -p $(build)/src/Engine/Shaders/
 
 $(exe): $(obj)
-	g++ $^ -o $(exe) $(link) $(arch) -pthread 
+	g++ $^ -Wall -g -o $(exe) $(link) $(arch) -pthread 
 
 $(build)/%.o: %.cpp
-	g++ -c $< -o $@ -std=c++11 $(inc) $(arch) -pthread $(flags)
+	g++ -c $< -Wall -g -o $@ -std=c++11 $(inc) $(arch) -pthread $(flags)
 
 #i686-w64-mingw32-g++
 #x86_64-w64-mingw32-g++
