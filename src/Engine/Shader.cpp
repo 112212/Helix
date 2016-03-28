@@ -13,7 +13,7 @@ namespace Helix {
     void Shader::loadShader(std::string shaderName, std::string vertexShaderFile, std::string fragmentShaderFile, std::string geometryShaderFile)
     {
         GLuint vertexShader = this->readShader(vertexShaderFile, GL_VERTEX_SHADER);
-        GLuint geometryShader;
+        GLuint geometryShader = 0;
         if(geometryShaderFile.length() > 0) {
             geometryShader = this->readShader(geometryShaderFile, GL_GEOMETRY_SHADER);
         }
@@ -99,7 +99,7 @@ namespace Helix {
         return m_loadedShaders[shaderName];
     }
     
-    void Shader::InitPyro(std::string shaderName, float time, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
+    void Shader::InitPyro(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
     {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -126,7 +126,7 @@ namespace Helix {
         glUniform1f(timeLoc, time);   
         
         //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f,  3.0f);
-        //glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
+        glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
 
         //glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         //glm::mat4 projection = glm::perspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
@@ -155,7 +155,7 @@ namespace Helix {
         //glUseProgram(0);
     }
     
-    void Shader::InitBob(std::string shaderName, float time, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
+    void Shader::InitBob(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
     {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -182,7 +182,7 @@ namespace Helix {
         glUniform1f(timeLoc, time); 
         
         //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f,  3.0f);
-        //glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
+        glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
 
         //glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         //glm::mat4 projection = glm::perspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);

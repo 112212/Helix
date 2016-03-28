@@ -22,8 +22,8 @@ namespace Helix {
             GLuint GetShader(std::string shaderName);
             
             //should be moved to game code & merged with model->Draw
-            void InitPyro(std::string shaderName, float time, glm::mat4 view, glm::mat4 projection, float posX = 0, float posY = -2, float posZ = -2);
-            void InitBob(std::string shaderName, float time, glm::mat4 view, glm::mat4 projection, float posX = 0, float posY = -2, float posZ = -2);
+            void InitPyro(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX = 0, float posY = -2, float posZ = -2);
+            void InitBob(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX = 0, float posY = -2, float posZ = -2);
 
          private:
             GLuint readShader(std::string shaderFile, GLenum shaderType);

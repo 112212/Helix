@@ -37,15 +37,17 @@ void App::init()
         throw std::string("Failed to create window: ") + SDL_GetError();
     }
     
+    /*
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if(renderer == nullptr) {
         throw std::string("Failed to create renderer: ") + SDL_GetError();
     }
+    */
     
-    /*
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
@@ -56,14 +58,15 @@ void App::init()
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
     SDL_GL_SetSwapInterval(1);
     
+    
     SDL_GLContext glContext;
     glContext = SDL_GL_CreateContext(window);
     if(glContext == nullptr) {
         throw std::string("Failed to create GLContext: ") + SDL_GetError();
     }
-    */
     
-    //SDL_GL_MakeCurrent(window, glContext);
+    
+    SDL_GL_MakeCurrent(window, glContext);
     
     glewExperimental = GL_TRUE; 
     glewInit();
@@ -93,13 +96,32 @@ void App::init()
     float mouseScroll = 0.0;
 
     he::Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-
+    
+    /*
     he::Shader pyroShader("pyroShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
     he::Shader bobShader("bobShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
        
     he::Model pyroModel("../Assets/Models/Pyro/Pyro.obj");
     he::Model bobModel("../Assets/Models/guard/boblampclean.md5mesh");
-
+    */
+    
+    he::Shader skeletalAnimShader("skeletalAnimShader", "../Assets/Shaders/test_03.vs", "../Assets/Shaders/test_03.fs");
+    
+    he::ModelLoader loader;
+    
+    he::Model test(skeletalAnimShader.GetShader("skeletalAnimShader"));
+    loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &test);
+    //test.SetModelTrans(transformBob);
+    
+    
+    he::Model test2(skeletalAnimShader.GetShader("skeletalAnimShader"));
+    loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &test2);
+    //test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
+    
+    //add scale and rotate methods, and then after translation and/or rotation, scale by:
+    //glm::vec3(0.07f, 0.07f, 0.07f)
+    
+    /*
     SDL_Rect cursorRect;
     cursorRect.x = (this->getSizeX() / 2) - 8;
     cursorRect.y = (this->getSizeY() / 2) - 8;
@@ -110,11 +132,12 @@ void App::init()
     if(!cursorSurface) {
         throw std::string("Error loading image: ") + IMG_GetError();
     }
-
+    
     SDL_Texture* cursorTexture = SDL_CreateTextureFromSurface(renderer, cursorSurface);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); //use after SDL_CreateTextureFromSurface to prevent texture bug
 
     SDL_FreeSurface(cursorSurface);
+    */
     
     bool mouserelative = true;
     bool fullscreen = true;
@@ -176,10 +199,13 @@ void App::init()
                         if(fullscreen) {
                             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
                             
-                            int w, h;
-                            SDL_GetRendererOutputSize(renderer, &w, &h);
-                            this->setSizeX(w);
-                            this->setSizeY(h);
+                            GLint viewport[4];
+                            glGetIntegerv(GL_VIEWPORT, viewport);
+                            
+                            //int w, h;
+                            //SDL_GetRendererOutputSize(renderer, &w, &h);
+                            this->setSizeX(viewport[2]);
+                            this->setSizeY(viewport[3]);
                             
                             fullscreen = false;
                         }
@@ -227,6 +253,7 @@ void App::init()
                     
                     case SDLK_p:
                     {
+                        /*
                         std::stringstream ss;
                         ss << "screenshot_" << std::time(0) << ".bmp";
                         std::string screenshotFileName = ss.str();
@@ -235,6 +262,7 @@ void App::init()
                         SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, screenshotSurface->pixels, screenshotSurface->pitch);
                         SDL_SaveBMP(screenshotSurface, screenshotFileName.c_str());
                         SDL_FreeSurface(screenshotSurface);
+                        */
                     }
                     break;
                     
@@ -290,8 +318,10 @@ void App::init()
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         
+        /*
         cursorRect.x = (this->getSizeX() / 2) - 8;
         cursorRect.y = (this->getSizeY() / 2) - 8;
+        */
         
         int xpos;
         int ypos;
@@ -317,22 +347,38 @@ void App::init()
                           << " z: " << camera.GetPosition().z << std::endl;
             }
         }
-        
+        glm::mat4 model;
+        model = glm::translate(model, glm::vec3(0.0, -2.0, -2.0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.07f, 0.07f, 0.07f));
+            
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
         
+        /*
         glUseProgram(pyroShader.GetShader("pyroShader"));
         //remove argument [ pyroShader.GetShader(); ] ?
-        pyroShader.InitPyro("pyroShader", this->getTimeElapsed(), view, projection);
+        pyroShader.InitPyro("pyroShader", this->getTimeElapsed(), camera.GetPosition(), view, projection);
         pyroModel.Draw(pyroShader.GetShader("pyroShader"));
         glUseProgram(0);
 
         glUseProgram(bobShader.GetShader("bobShader"));
-        bobShader.InitBob("bobShader", this->getTimeElapsed(), view, projection, 4);
+        bobShader.InitBob("bobShader", this->getTimeElapsed(), camera.GetPosition(), view, projection, 4);
         bobModel.Draw(bobShader.GetShader("bobShader"));
-        glUseProgram(0);    
+        glUseProgram(0);
+        */
+        
+        test.tick(this->getTimeElapsed());
+        test.render(model, view, projection);
+        
+        
+        // disable animation on non-animated models, custom shader without bones and weight for static models?
+        glm::mat4 model2;
+        model2 = glm::translate(model2, glm::vec3(4.0f, -2.0f, -2.0f));
+        model2 = glm::rotate(model2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        test2.render(model2, view, projection);   
                   
-        SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
+        //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         
         //SDL_RenderPresent(renderer);
         SDL_GL_SwapWindow(window); 
