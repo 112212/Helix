@@ -4,6 +4,7 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
 
+in vec4 vertex_color;
 out vec4 color;
 
 uniform vec3 lightPos;
@@ -15,6 +16,7 @@ uniform sampler2D texture_diffuse1;
 uniform float time;
 
 void main() {
+/*
     float ambientStrength = 0.5f;
     vec3 ambient = ambientStrength * vec3(texture(texture_diffuse1, TexCoords));
 
@@ -34,4 +36,7 @@ void main() {
     //vec3 result = vec3(1.0f, 1.0f, 1.0f);
     
     color = vec4(result, 1.0f);
+*/
+
+    color = vertex_color;
 }

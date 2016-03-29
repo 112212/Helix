@@ -21,9 +21,19 @@ uniform mat4 boneTransformation[MAX_BONES];
 //check if has animation by weight/bones
 //uniform bool hasAnimation;
 
+out mat4 mvp;
+
+out Vertex
+{
+  vec4 normal;
+  vec4 color;
+  vec3 FragPos;
+  vec3 Normal;
+  vec2 TexCoords;
+} vertex;
+
 void main() {
     vec4 PosL = vec4(0);
-    
     //if(hasAnimation) {
     if(weight[0] + weight[1] + weight[2] + weight[3] > 0.0) { //or just 0.9, or 0.99 due to sum of weights = 1
         //boneTransformation[boneID[0]]
@@ -38,10 +48,14 @@ void main() {
         PosL = vec4(position, 1.0);
     }
         
-    gl_Position = projection * view * model * PosL;
+    gl_Position = PosL;
     
     FragPos = vec3(model * vec4(position, 1.0f));
 
     Normal = mat3(transpose(inverse(model))) * normal;
     TexCoords = texCoords;
+    
+    mvp = projection * view * model;
+    vertex.normal = vec4(Normal, 1.0);
+    vertex.color = vec4(Normal, 1.0);
 }

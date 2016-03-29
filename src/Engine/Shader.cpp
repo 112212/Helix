@@ -3,14 +3,14 @@
 namespace Helix {
     Shader::Shader() {}
     
-    Shader::Shader(std::string shaderName, std::string vertexShaderFile, std::string fragmentShaderFile, std::string geometryShaderFile)
+    Shader::Shader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string geometryShaderFile)
     {
-        this->loadShader(shaderName, vertexShaderFile, fragmentShaderFile, geometryShaderFile);
+        this->loadShader(vertexShaderFile, fragmentShaderFile, geometryShaderFile);
     }
     
     Shader::~Shader() {}
 
-    void Shader::loadShader(std::string shaderName, std::string vertexShaderFile, std::string fragmentShaderFile, std::string geometryShaderFile)
+    void Shader::loadShader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string geometryShaderFile)
     {
         GLuint vertexShader = this->readShader(vertexShaderFile, GL_VERTEX_SHADER);
         GLuint geometryShader = 0;
@@ -30,11 +30,13 @@ namespace Helix {
         glLinkProgram(shaderProgram); 
         
         if(!shaderProgram) {
-            throw std::string("Failed to create shader") + shaderName;
+            throw std::string("Failed to create shader program");
         }
 
         // shader was compiled and linked, now add GLuint shaderProgram to std::map ===> should be moved to Game
-        m_loadedShaders.insert(std::pair<std::string,GLuint>(shaderName, shaderProgram));
+        //m_loadedShaders.insert(std::pair<std::string,GLuint>(shaderName, shaderProgram));
+        
+        m_shader = shaderProgram;
         
         /*
         glDeleteShader(vertexShader);
@@ -80,25 +82,22 @@ namespace Helix {
         return shader;
     }
     
-    void Shader::UseShader(std::string shaderName)
+    void Shader::UseShader()
     {
-        //remove find due to slow lookup?
-        if (m_loadedShaders.find(shaderName) == m_loadedShaders.end()) {        
-            throw std::string("Shader could not be used, missing in std::map");
-        }
-        
-        glUseProgram(m_loadedShaders[shaderName]);
+        glUseProgram(m_shader);
     }
     
-    GLuint Shader::GetShader(std::string shaderName)
+    void Shader::UnuseShader()
     {
-        if (m_loadedShaders.find(shaderName) == m_loadedShaders.end()) {
-            throw std::string("Shader could not be used, missing in std::map");
-        }
-        
-        return m_loadedShaders[shaderName];
+        glUseProgram(0);
     }
     
+    GLuint Shader::GetShader()
+    {        
+        return m_shader;
+    }
+    
+    /*
     void Shader::InitPyro(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
     {
         glEnable(GL_DEPTH_TEST);
@@ -211,5 +210,6 @@ namespace Helix {
         
         //glUseProgram(0);
     }
+    */
 }
 

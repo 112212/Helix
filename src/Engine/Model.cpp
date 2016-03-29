@@ -432,7 +432,8 @@ namespace Helix {
      
             glGenTextures(1, &meshes[x].tex);
             glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
-            glTexImage2D(GL_TEXTURE_2D, 0, meshes[x].image->format->BytesPerPixel, meshes[x].image->w, meshes[x].image->h, 0, colorMode, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
+            // or GL_BGR instead of colorMode
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, meshes[x].image->w, meshes[x].image->h, 0, colorMode, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
             
             // tex data bound to uniform
             // not needed?
@@ -476,16 +477,16 @@ namespace Helix {
     };
     
     // this is just a generic render function for quick and easy rendering
-    void Model::render(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+    void Model::Draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
     {
         if(!modelLoaded) {
             throw std::string("Please load in a model before trying to render one.");
         }
         
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
      
-        glUseProgram(shader);
+        //glUseProgram(shader);
         for(int x = 0; x < meshes.size(); x++) {
             glBindVertexArray(meshes[x].vao);
 
@@ -523,27 +524,6 @@ namespace Helix {
             glEnableVertexAttribArray(meshes[x].texAttribute);
             glVertexAttribPointer(meshes[x].texAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
             
-            GLint colorMode;
-            if(meshes[x].image->format->BytesPerPixel == 4) {
-                if(meshes[x].image->format->Rmask == 0x000000ff) {
-                    colorMode = GL_RGBA;
-                }
-                else {
-                    colorMode = GL_BGRA;
-                }
-            }
-            else if(meshes[x].image->format->BytesPerPixel == 3) {
-                if(meshes[x].image->format->Rmask == 0x000000ff) {
-                    colorMode = GL_RGB;
-                }
-                else {
-                    colorMode = GL_BGR;
-                }
-            }
-            else {
-                 throw std::string("Image is not truecolor!");
-            }
-            
             //glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
             //remove glTexImage2D!
@@ -559,10 +539,10 @@ namespace Helix {
             glBindVertexArray(0);
         }
         
-        //glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
+        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_CULL_FACE);
         
-        glUseProgram(0);
+        //glUseProgram(0);
     };
      
     void Model::SetModelTrans(glm::mat4 in)

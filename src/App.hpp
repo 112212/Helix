@@ -17,6 +17,7 @@ class App {
         void setSizeY(int sizeY);
         double getDeltaTime() const;
         double getTimeElapsed() const;
+        void takeScreenshot(int x, int y, int w, int h);
         
         int m_sizeX;
         int m_sizeY;
