@@ -141,9 +141,9 @@ void App::init()
     
     std::vector<glm::vec3> pointsPositions;
     std::vector<glm::vec3> pointsColors;
-    for(int x = 0; x < 10; ++x) {
-        for(int y = 0; y < 10; ++y) {
-            for(int z = 0; z < 10; ++z) {
+    for(int x = 0; x < 20; ++x) {
+        for(int y = 0; y < 20; ++y) {
+            for(int z = 0; z < 20; ++z) {
                 pointsPositions.push_back(glm::vec3(x, y, z));
                 pointsColors.push_back(glm::vec3(1.0, 0.0, 0.0));
             }
@@ -176,8 +176,6 @@ void App::init()
                                        0, 4, 1, 5, 2, 6, 3, 7,                    
     };
     
-    glm::mat4 identityModel;
-    
     glUseProgram(frustumShader.GetShader());
     GLuint vao, vbo, vbos;
     glGenVertexArrays(1, &vao);
@@ -186,10 +184,6 @@ void App::init()
     glGenBuffers(1, &vbos);
     glBindVertexArray(0);
     glUseProgram(0);
-            
-    
-    glm::mat4 identityModel2;
-    identityModel = glm::translate(identityModel, glm::vec3(0.0f, 0.0f, 0.0f));
 
     glUseProgram(frustumShader.GetShader());
     GLuint vao2, vbo2, vbos2;
@@ -199,11 +193,11 @@ void App::init()
     glGenBuffers(1, &vbos2);
     glBindVertexArray(0);
     glUseProgram(0);
-    
 
-    bool mouserelative = true;
-    bool fullscreen = true;
-    bool wireframe = true;
+    bool toggleMouseRelative = true;
+    bool toggleFullscreen = true;
+    bool toggleWireframe = true;
+    bool toggleCamera = true;
     
     int skip = 0;
     
@@ -226,36 +220,6 @@ void App::init()
                     case SDLK_UP:
                     {
                         //camera.ToggleLockY();
-                        glm::vec3 newPos = glm::vec3(camera2.GetPosition());
-                        newPos.z -= 1.01;
-                        camera2.SetPosition(newPos);
-                    }
-                    break;
-                    
-                    case SDLK_RIGHT:
-                    {
-                        //camera.ToggleLockY();
-                        glm::vec3 newPos = glm::vec3(camera2.GetPosition());
-                        newPos.x += 1.01;
-                        camera2.SetPosition(newPos);
-                    }
-                    break;
-                    
-                    case SDLK_LEFT:
-                    {
-                        //camera.ToggleLockY();
-                        glm::vec3 newPos = glm::vec3(camera2.GetPosition());
-                        newPos.x -= 1.01;
-                        camera2.SetPosition(newPos);
-                    }
-                    break;
-                    
-                    case SDLK_DOWN:
-                    {
-                        //camera.ToggleLockY();
-                        glm::vec3 newPos = glm::vec3(camera2.GetPosition());
-                        newPos.z += 1.01;
-                        camera2.SetPosition(newPos);
                     }
                     break;
                     
@@ -289,7 +253,7 @@ void App::init()
                     
                     case SDLK_f:
                     {       
-                        if(fullscreen) {
+                        if(toggleFullscreen) {
                             SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
                             
                             //glViewport(0, 0, 1024, 768);
@@ -303,7 +267,7 @@ void App::init()
                             
                             std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
                             
-                            fullscreen = false;
+                            toggleFullscreen = false;
                         }
                         else {
                             SDL_SetWindowFullscreen(window, 0);
@@ -316,7 +280,7 @@ void App::init()
                             
                             std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
                             
-                            fullscreen = true;
+                            toggleFullscreen = true;
                         }
                         
                         skip = 2;     
@@ -325,13 +289,13 @@ void App::init()
                     
                     case SDLK_SPACE:
                     {
-                        if(mouserelative) {
+                        if(toggleMouseRelative) {
                             SDL_SetRelativeMouseMode(SDL_FALSE);
-                            mouserelative = false;
+                            toggleMouseRelative = false;
                         }
                         else {
                             SDL_SetRelativeMouseMode(SDL_TRUE);
-                            mouserelative = true;
+                            toggleMouseRelative = true;
                         }
 
                         skip = 2;
@@ -340,13 +304,24 @@ void App::init()
                     
                     case SDLK_e:
                     {
-                        if(wireframe) {
+                        if(toggleWireframe) {
                             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                            wireframe = false;
+                            toggleWireframe = false;
                         }
                         else {
                             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                            wireframe = true;
+                            toggleWireframe = true;
+                        }
+                    }
+                    break;
+                    
+                    case SDLK_c:
+                    {
+                        if(toggleCamera) {
+                            toggleCamera = false;
+                        }
+                        else {
+                            toggleCamera = true;
                         }
                     }
                     break;
@@ -407,6 +382,24 @@ void App::init()
             camera.ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
         }
 
+        
+        if(state[SDL_SCANCODE_UP]) {
+            camera2.ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
+        }
+        
+        if(state[SDL_SCANCODE_DOWN]) {
+            camera2.ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
+        }
+        
+        if(state[SDL_SCANCODE_LEFT]) {
+            camera2.ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
+        }
+        
+        if(state[SDL_SCANCODE_RIGHT]) {
+            camera2.ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
+        }
+        
+
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         
@@ -423,9 +416,14 @@ void App::init()
             skip--; 
         }
         else {
-            if(mouserelative) {
-                camera.ProcessMouseMovement(xpos, ypos);
-                camera.ProcessMouseScroll(mouseScroll);
+            if(toggleMouseRelative) {
+                if(toggleCamera) {
+                    camera.ProcessMouseMovement(xpos, ypos);
+                    camera.ProcessMouseScroll(mouseScroll);
+                } else {
+                    camera2.ProcessMouseMovement(xpos, ypos);
+                    camera2.ProcessMouseScroll(mouseScroll);
+                }
             }
             else {
                 int xpos;
@@ -506,13 +504,7 @@ void App::init()
         }
         */
         
-        for(int i = 0; i < pointsPositions.size(); ++i) {
-            if(camera2.PointInFrustum(pointsPositions[i] * glm::mat3(identityModel))) {
-                pointsColors[i] = glm::vec3(0.0, 1.0, 0.0);
-            } else {
-                pointsColors[i] = glm::vec3(1.0, 0.0, 0.0);
-            }
-        }
+        glm::mat4 identityModel;
         
         glUseProgram(frustumShader.GetShader());
         glBindVertexArray(vao);
@@ -541,7 +533,18 @@ void App::init()
         glUseProgram(0);
         glDisable(GL_BLEND);
         
+        glm::mat4 identityModel2;
+        identityModel2 = glm::translate(identityModel2, glm::vec3(0.0f, 0.0f, 0.0f));
         
+        for(int i = 0; i < pointsPositions.size(); ++i) {
+            glm::vec3 transformedVector = glm::vec3(identityModel2 * glm::vec4(glm::vec3(pointsPositions[i]), 1.0));
+            
+            if(camera2.PointInFrustum(transformedVector)) {
+                pointsColors[i] = glm::vec3(0.0, 1.0, 0.0);
+            } else {
+                pointsColors[i] = glm::vec3(1.0, 0.0, 0.0);
+            }
+        }
         
         glUseProgram(frustumShader.GetShader());
         glEnable(GL_PROGRAM_POINT_SIZE);
@@ -561,7 +564,7 @@ void App::init()
         glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));        
 
-        glDrawArrays(GL_POINTS, 0, 1000);
+        glDrawArrays(GL_POINTS, 0, pointsPositions.size());
         glBindVertexArray(0);
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);

@@ -9,8 +9,6 @@ namespace Helix {
         m_mouse_sensitivity = SENSITIVITY;
         m_zoom = ZOOM;
         
-        m_front = glm::vec3(0.0f, 0.0f, -1.0f);
-        
         m_position = position;
         m_world_up = up;
         m_yaw = yaw;
@@ -26,9 +24,7 @@ namespace Helix {
         m_movement_speed = SPEED;
         m_mouse_sensitivity = SENSITIVITY;
         m_zoom = ZOOM;
-        
-        m_front = glm::vec3(0.0f, 0.0f, -1.0f);
-        
+
         m_position = glm::vec3(posX, posY, posZ);
         m_world_up = glm::vec3(upX, upY, upZ);
         m_yaw = yaw;
