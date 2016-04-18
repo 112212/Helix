@@ -137,6 +137,69 @@ void App::init()
 
     SDL_FreeSurface(cursorSurface);
     */
+    
+    
+    std::vector<glm::vec3> pointsPositions;
+    std::vector<glm::vec3> pointsColors;
+    for(int x = 0; x < 10; ++x) {
+        for(int y = 0; y < 10; ++y) {
+            for(int z = 0; z < 10; ++z) {
+                pointsPositions.push_back(glm::vec3(x, y, z));
+                pointsColors.push_back(glm::vec3(1.0, 0.0, 0.0));
+            }
+        }
+    }
+    
+    GLfloat colorsz[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    };
+
+    
+    GLubyte indicesFrustum[] = {1, 0, 4,
+                                1, 4, 5,
+                                1, 5, 6,
+                                1, 6, 2,
+                                2, 6, 3,
+                                3, 6, 7,
+                                3, 7, 4,
+                                3, 0, 4,
+                                /*
+                                0, 1, 2,
+                                0, 2, 3,
+                                4, 5, 6,
+                                4, 6, 7,
+                                */         
+    };
+    
+    GLubyte indicesFrustumOutline[] = {0, 1, 1, 2, 2, 3, 3, 0,
+                                       4, 5, 5, 6, 6, 7, 7, 4,
+                                       0, 4, 1, 5, 2, 6, 3, 7,                    
+    };
+    
+    glm::mat4 identityModel;
+    
+    glUseProgram(frustumShader.GetShader());
+    GLuint vao, vbo, vbos;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);  
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &vbos);
+    glBindVertexArray(0);
+    glUseProgram(0);
+            
+    
+    glm::mat4 identityModel2;
+    identityModel = glm::translate(identityModel, glm::vec3(0.0f, 0.0f, 0.0f));
+
+    glUseProgram(frustumShader.GetShader());
+    GLuint vao2, vbo2, vbos2;
+    glGenVertexArrays(1, &vao2);
+    glBindVertexArray(vao2);
+    glGenBuffers(1, &vbo2);
+    glGenBuffers(1, &vbos2);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    
 
     bool mouserelative = true;
     bool fullscreen = true;
@@ -180,7 +243,6 @@ void App::init()
                     
                     case SDLK_LEFT:
                     {
-                        std::cout << "up" << std::endl;
                         //camera.ToggleLockY();
                         glm::vec3 newPos = glm::vec3(camera2.GetPosition());
                         newPos.x -= 1.01;
@@ -190,7 +252,6 @@ void App::init()
                     
                     case SDLK_DOWN:
                     {
-                        std::cout << "up" << std::endl;
                         //camera.ToggleLockY();
                         glm::vec3 newPos = glm::vec3(camera2.GetPosition());
                         newPos.z += 1.01;
@@ -291,7 +352,7 @@ void App::init()
                     break;
                     
                     case SDLK_p:
-                        this->takeScreenshot(0, 0, this->getSizeX(), this->getSizeY());
+                        //this->takeScreenshot(0, 0, this->getSizeX(), this->getSizeY());
                     break;
                     
                     case SDLK_ESCAPE:
@@ -382,7 +443,7 @@ void App::init()
         }
         
         glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
 
         glm::mat4 view2 = camera2.GetViewMatrix();
         glm::mat4 projection2 = glm::perspective(glm::radians(camera2.GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);   
@@ -423,7 +484,7 @@ void App::init()
         model2 = glm::rotate(model2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
        
         glUseProgram(skeletalAnimShader.GetShader());
-        test2.Draw(model2, view, projection);
+        //test2.Draw(model2, view, projection);
         glUseProgram(0);
         
         glm::mat4 model3;
@@ -431,7 +492,7 @@ void App::init()
         model3 = glm::rotate(model3, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
         glUseProgram(skeletalAnimShader.GetShader());
-        test2.Draw(model3, view, projection);
+        //test2.Draw(model3, view, projection);
         glUseProgram(0);
         
         camera.ExtractFrustumPlanes(view, projection);
@@ -445,123 +506,65 @@ void App::init()
         }
         */
         
-        std::vector<glm::vec3> pointsPositions;
-        std::vector<glm::vec3> pointsColors;
-        for(int x = 0; x < 10; ++x) {
-            for(int y = 0; y < 10; ++y) {
-                for(int z = 0; z < 10; ++z) {
-                    pointsPositions.push_back(glm::vec3(x + 10, y + 10, z + 10));
-                    pointsColors.push_back(glm::vec3(1.0, 0.0, 0.0));
-                }
-            }
-        }
-        
         for(int i = 0; i < pointsPositions.size(); ++i) {
-            if(camera2.PointInFrustum(pointsPositions[i])) {
+            if(camera2.PointInFrustum(pointsPositions[i] * glm::mat3(identityModel))) {
                 pointsColors[i] = glm::vec3(0.0, 1.0, 0.0);
             } else {
                 pointsColors[i] = glm::vec3(1.0, 0.0, 0.0);
             }
         }
         
-        glm::mat4 identityModel;
-        //identityModel = glm::translate(identityModel, glm::vec3(-2.0f, -2.0f, -2.0f));
-
-        GLuint vao2, vbo2, vbos2;
-        glGenVertexArrays(1, &vao2);
-        glBindVertexArray(vao2);
+        glUseProgram(frustumShader.GetShader());
+        glBindVertexArray(vao);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         
-        glGenBuffers(1, &vbo2);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &camera2.m_frustum_vertices, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
         
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsPositions.size(), &pointsPositions[0], GL_STATIC_DRAW);
-        GLint posAttrib2 = glGetAttribLocation(frustumShader.GetShader(), "position");
-        glEnableVertexAttribArray(posAttrib2);        
-        glVertexAttribPointer(posAttrib2, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, vbos);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(colorsz), colorsz, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
         
-        glGenBuffers(1, &vbos2);
-        glBindBuffer(GL_ARRAY_BUFFER, vbos2);
-        
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsColors.size(), &pointsColors[0], GL_STATIC_DRAW);
-        GLint posAttrib3 = glGetAttribLocation(frustumShader.GetShader(), "color");
-        glEnableVertexAttribArray(posAttrib3);        
-        glVertexAttribPointer(posAttrib3, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-
         glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel));
         glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         
-        glBindVertexArray(vao2);
-        glEnable(GL_PROGRAM_POINT_SIZE);
-        glUseProgram(frustumShader.GetShader());
-        glDrawArrays(GL_POINTS, 0, 1000);
-        glBindVertexArray(0);
-        glUseProgram(0);
-        glDisable(GL_PROGRAM_POINT_SIZE);
-   
-
-
-
-        glm::mat4 identityModel2;
-
-        GLuint vao, vbo, vbos;
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-        
-        GLfloat colors[3] = {0.0, 0.0, 1.0};
-        
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glUseProgram(frustumShader.GetShader());
-        
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &camera2.m_frustum_vertices[0], GL_STATIC_DRAW);
-        GLint posAttrib = glGetAttribLocation(frustumShader.GetShader(), "position");
-        glEnableVertexAttribArray(posAttrib);        
-        glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        
-        glGenBuffers(1, &vbos);
-        glBindBuffer(GL_ARRAY_BUFFER, vbos);
-
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsPositions.size(), &pointsPositions[0], GL_STATIC_DRAW);
-        GLint posAttrib1 = glGetAttribLocation(frustumShader.GetShader(), "color");
-        glEnableVertexAttribArray(posAttrib1);        
-        glVertexAttribPointer(posAttrib1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel2));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        
-        //glUniform3f(glGetUniformLocation(frustumShader.GetShader(), "inColor"), 0.0, 0.0, 1.0);
-        
-        GLubyte indicesFrustum[] = {1, 0, 4,
-                                    1, 4, 5,
-                                    1, 5, 6,
-                                    1, 6, 2,
-                                    2, 6, 3,
-                                    3, 6, 7,
-                                    3, 7, 4,
-                                    3, 0, 4,
-                                    /*
-                                    0, 1, 2,
-                                    0, 2, 3,
-                                    4, 5, 6,
-                                    4, 6, 7,
-                                    */         
-        };
-        
-        GLubyte indicesFrustumOutline[] = {0, 1, 1, 2, 2, 3, 3, 0,
-                                           4, 5, 5, 6, 6, 7, 7, 4,
-                                           0, 4, 1, 5, 2, 6, 3, 7,                    
-        };
-
+        //glUniform3f(glGetUniformLocation(frustumShader.GetShader(), "inColor2"), 0.0, 0.0, 1.0);
+ 
         glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_BYTE, indicesFrustum);
         glDrawElements(GL_LINES, 24, GL_UNSIGNED_BYTE, indicesFrustumOutline);
         glBindVertexArray(0);
         glUseProgram(0);
         glDisable(GL_BLEND);
+        
+        
+        
+        glUseProgram(frustumShader.GetShader());
+        glEnable(GL_PROGRAM_POINT_SIZE);
+        glBindVertexArray(vao2);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsPositions.size(), &pointsPositions[0], GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);    
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbos2);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsColors.size(), &pointsColors[0], GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(1);    
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        
+        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel2));
+        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));        
+
+        glDrawArrays(GL_POINTS, 0, 1000);
+        glBindVertexArray(0);
+        glDisable(GL_PROGRAM_POINT_SIZE);
+        glUseProgram(0);
         
         //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         
