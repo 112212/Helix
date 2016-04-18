@@ -2,6 +2,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_access.hpp>
+
+#include <iostream>
 
 namespace Helix {
     class Camera {
@@ -26,14 +29,23 @@ namespace Helix {
 
             void ProcessKeyboard(MoveDirection direction, float dt);
             void ProcessMouseMovement(float offsetX, float offsetY, bool constrainPitch = true);
-            void ProcessMouseScroll(float offsetY);   
+            void ProcessMouseScroll(float offsetY);
+            void SetPosition(glm::vec3 position);
             float GetZoom() const;
             glm::mat4 GetViewMatrix() const;
             glm::vec3 GetPosition() const;
             void ToggleLockY();
             
+            void ExtractFrustumPlanes(glm::mat4 view, glm::mat4 projection);
+            bool PointInFrustum(glm::vec3 center);
+            bool SphereInFrustum(glm::vec3 center, float radius);
+            void PrintFrustumVerticesPositions();
+            
+            glm::vec3 m_frustum_vertices[8];
+            
         private:
             void updateCameraVectors();
+            glm::vec3 threePlanesIntersectionPoint(glm::vec4 a, glm::vec4 b, glm::vec4 c);  
             
             glm::vec3 m_position;
             glm::vec3 m_front;
@@ -48,5 +60,7 @@ namespace Helix {
             float m_zoom;
             
             bool m_lock_y;
+            
+            glm::vec4 m_frustum_planes[6];
     };  
 }

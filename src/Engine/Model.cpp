@@ -11,7 +11,7 @@ namespace Helix {
     }
     
     void ModelLoader::LoadModel(std::string fileName, Model* m)
-    {
+    {        
         Assimp::Importer importer;
         
         // set maximum 4 bones per vertex (4 is also default value)
@@ -183,7 +183,7 @@ namespace Helix {
             tempV.y = mesh->mVertices[x].y;
             tempV.z = mesh->mVertices[x].z;
             tempMesh.vertices.push_back(tempV);
-     
+
             // load the uvs (if they exist)
             if(mesh->mTextureCoords[0]) {
                 glm::vec2 tempUV;
@@ -372,6 +372,11 @@ namespace Helix {
         if(!modelLoaded) {
             throw std::string("Please load in a model before initializing buffers.");
         }
+
+        for(auto const &it : boneID) {
+            std::cout << "(bones:" << boneID.size() << ") name: " << it.first
+                                                       << " uint: " << it.second << std::endl;
+        }
      
         // loop through each mesh and initialize them
         for(int x = 0; x < meshes.size(); x++) {   
@@ -396,12 +401,14 @@ namespace Helix {
                  throw std::string("Image is not truecolor!");
             }
             
+            
             for(int k = 0; k < meshes[x].boneID.size(); k++) {
                 std::cout << "mesh id: " << x << " (verts:" << meshes[x].boneID.size() << ") has boneID:" << " x: " << meshes[x].boneID[k].x
                                                        << " y: " << meshes[x].boneID[k].y
                                                        << " z: " << meshes[x].boneID[k].z
                                                        << " w: " << meshes[x].boneID[k].w << std::endl;
             }
+            
             
             glGenVertexArrays(1, &meshes[x].vao);
             glBindVertexArray(meshes[x].vao);
@@ -433,8 +440,8 @@ namespace Helix {
             glGenTextures(1, &meshes[x].tex);
             glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
             // or GL_BGR instead of colorMode
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, meshes[x].image->w, meshes[x].image->h, 0, colorMode, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
-            
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, meshes[x].image->w, meshes[x].image->h, 0, colorMode, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
+
             // tex data bound to uniform
             // not needed?
             //glUniform1i(glGetUniformLocation(shader, "texture_diffuse"), 0);

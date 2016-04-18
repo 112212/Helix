@@ -6,6 +6,8 @@ in vec2 texCoords;
 in ivec4 boneID;
 in vec4 weight;
 
+out vec3 boneIDD;
+
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoords;
@@ -32,6 +34,15 @@ void main() {
         BoneTransform += boneTransformation[2] * weight[2];
         BoneTransform += boneTransformation[3] * weight[3];
         
+        /*
+        BoneTransform = mat4(
+                            1.0f, 0.0f, 0.0f, 0.0f,
+                            0.0f, 1.0f, 0.0f, 0.0f,
+                            0.0f, 0.0f, 1.0f, 0.0f,
+                            0.0f, 0.0f, 0.0f, 1.0f
+                            );
+        */
+        
         PosL = BoneTransform * vec4(position, 1.0);
     }
     else { //0.0 means no weight exists, do not use bones
@@ -44,4 +55,6 @@ void main() {
 
     Normal = mat3(transpose(inverse(model))) * normal;
     TexCoords = texCoords;
+    
+    boneIDD = vec3(boneID.x, boneID.y, boneID.z);
 }

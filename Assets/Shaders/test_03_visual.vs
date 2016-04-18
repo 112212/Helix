@@ -6,7 +6,6 @@ in vec2 texCoords;
 in ivec4 boneID;
 in vec4 weight;
 
-out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoords;
 
@@ -27,9 +26,6 @@ out Vertex
 {
   vec4 normal;
   vec4 color;
-  vec3 FragPos;
-  vec3 Normal;
-  vec2 TexCoords;
 } vertex;
 
 void main() {
@@ -50,8 +46,6 @@ void main() {
         
     gl_Position = PosL;
     
-    FragPos = vec3(model * vec4(position, 1.0f));
-
     Normal = mat3(transpose(inverse(model))) * normal;
     TexCoords = texCoords;
     

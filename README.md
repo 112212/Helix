@@ -10,6 +10,7 @@ C++ game engine built on SDL and OpenGL
 * World camera - done
 * Bullet physics integration - not yet
  *  Bullet 3D raycast picking - not yet
+* View Frustum Culling - not yet
 * Skybox - not yet
 * Shaders
  * Lights - not yet

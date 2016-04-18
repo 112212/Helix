@@ -4,6 +4,8 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
 
+in vec3 boneIDD;
+
 out vec4 color;
 
 uniform vec3 lightPos;
@@ -13,6 +15,15 @@ uniform vec3 lightColor;
 uniform sampler2D texture_diffuse1;
 
 uniform float time;
+
+float near = 1.0; 
+float far  = 100.0; 
+  
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0; // Back to NDC 
+    return (2.0 * near * far) / (far + near - z * (far - near));    
+}
 
 void main() {
     float ambientStrength = 0.5f;
@@ -34,4 +45,5 @@ void main() {
     //vec3 result = vec3(1.0f, 1.0f, 1.0f);
     
     color = vec4(result, 1.0f);
+    //color = vec4(boneIDD, 1.0f);
 }
