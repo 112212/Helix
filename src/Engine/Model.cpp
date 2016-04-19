@@ -157,6 +157,16 @@ namespace Helix {
             }
         }
     };
+    
+    glm::vec3 ModelLoader::getBoundingBoxMin() const
+    {
+        return m_boundingBoxMin;
+    }
+    
+    glm::vec3 ModelLoader::getBoundingBoxMax() const
+    {
+        return m_boundingBoxMax;
+    }
      
     // add some error handling (not all models have uvs, etc)
     void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, Model* m)
@@ -182,7 +192,15 @@ namespace Helix {
             tempV.x = mesh->mVertices[x].x;
             tempV.y = mesh->mVertices[x].y;
             tempV.z = mesh->mVertices[x].z;
-            tempMesh.vertices.push_back(tempV);
+            tempMesh.vertices.push_back(tempV); 
+            
+            if(mesh->mVertices[x].x < m_boundingBoxMin.x) m_boundingBoxMin.x = mesh->mVertices[x].x;
+            if(mesh->mVertices[x].y < m_boundingBoxMin.y) m_boundingBoxMin.y = mesh->mVertices[x].y;
+            if(mesh->mVertices[x].z < m_boundingBoxMin.z) m_boundingBoxMin.z = mesh->mVertices[x].z;
+            
+            if(mesh->mVertices[x].x > m_boundingBoxMax.x) m_boundingBoxMax.x = mesh->mVertices[x].x;
+            if(mesh->mVertices[x].y > m_boundingBoxMax.y) m_boundingBoxMax.y = mesh->mVertices[x].y;
+            if(mesh->mVertices[x].z > m_boundingBoxMax.z) m_boundingBoxMax.z = mesh->mVertices[x].z;
 
             // load the uvs (if they exist)
             if(mesh->mTextureCoords[0]) {

@@ -109,8 +109,8 @@ void App::init()
     
     he::ModelLoader loader;
     
-    he::Model test(skeletalAnimShader.GetShader());
-    loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &test);
+    //he::Model test(skeletalAnimShader.GetShader());
+    //loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &test);
     //test.SetModelTrans(transformBob);
       
     he::Model test2(skeletalAnimShader.GetShader());
@@ -176,6 +176,11 @@ void App::init()
                                        0, 4, 1, 5, 2, 6, 3, 7,                    
     };
     
+    GLubyte indicesBoundingBoxOutline[] = {0, 1, 1, 5, 5, 4, 4, 0,
+                                           2, 3, 3, 7, 7, 6, 6, 2,
+                                           0, 2, 1, 3, 5, 7, 4, 6,
+    };
+    
     glUseProgram(frustumShader.GetShader());
     GLuint vao, vbo, vbos;
     glGenVertexArrays(1, &vao);
@@ -193,6 +198,34 @@ void App::init()
     glGenBuffers(1, &vbos2);
     glBindVertexArray(0);
     glUseProgram(0);
+    
+    std::cout << "min x: " << loader.getBoundingBoxMin().x << " y: " << loader.getBoundingBoxMin().y << " z: " << loader.getBoundingBoxMin().z << std::endl;
+    std::cout << "max x: " << loader.getBoundingBoxMax().x << " y: " << loader.getBoundingBoxMax().y << " z: " << loader.getBoundingBoxMax().z << std::endl;
+    
+    glm::vec3 boundinxBoxVertices[8];
+    boundinxBoxVertices[0] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMin().z);
+    boundinxBoxVertices[1] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMax().z);
+    boundinxBoxVertices[2] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMin().z);
+    boundinxBoxVertices[3] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMax().z);
+    boundinxBoxVertices[4] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMin().z);
+    boundinxBoxVertices[5] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMax().z);
+    boundinxBoxVertices[6] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMin().z);
+    boundinxBoxVertices[7] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMax().z);
+    
+    glUseProgram(frustumShader.GetShader());
+    GLuint vao3, vbo3, vbos3;
+    glGenVertexArrays(1, &vao3);
+    glBindVertexArray(vao3);
+    glGenBuffers(1, &vbo3);
+    glGenBuffers(1, &vbos3);
+    glBindVertexArray(0);
+    glUseProgram(0);
+
+    
+
+    
+    
+    
 
     bool toggleMouseRelative = true;
     bool toggleFullscreen = true;
@@ -568,6 +601,57 @@ void App::init()
         glBindVertexArray(0);
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
+        
+        
+        //works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
+        for(int i = 0; i < 8; ++i) {
+            glm::vec3 transformedVector = glm::vec3(model3 * glm::vec4(glm::vec3(boundinxBoxVertices[i]), 1.0));
+            
+            if(camera2.PointInFrustum(transformedVector)) {
+                //std::cout << "vertex: " << i << " " << "in frustum! DRAW" << std::endl;
+                
+                glUseProgram(skeletalAnimShader.GetShader());
+                test2.Draw(model3, view, projection);
+                glUseProgram(0);
+                break;
+            } else {
+                //std::cout << "vertex: " << i << " " << "out of frustum! DONT DRAW" << std::endl;
+            }
+        }
+        
+        
+        glUseProgram(frustumShader.GetShader());
+        glEnable(GL_PROGRAM_POINT_SIZE);
+        glBindVertexArray(vao3);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo3);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &boundinxBoxVertices, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbos3);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(colorsz), colorsz, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        
+        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(model3));
+        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        
+        glDrawArrays(GL_POINTS, 0, 8);
+        //glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_BYTE, indicesFrustum);
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_BYTE, indicesBoundingBoxOutline);
+        glBindVertexArray(0);
+        glDisable(GL_PROGRAM_POINT_SIZE);
+        glUseProgram(0);
+        glDisable(GL_BLEND);
+        
+        
+        
+        
+        
         
         //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         

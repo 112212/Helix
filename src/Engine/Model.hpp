@@ -37,7 +37,7 @@ namespace Helix {
             std::vector<glm::vec3> normals;
             std::vector<glm::vec4> weights;
             std::vector<glm::vec4> boneID;
- 
+
             glm::mat4 baseModelMatrix;
  
             GLuint vao, vbo, nbo, ebo, uvb, tex, wbo, idbo;
@@ -118,6 +118,12 @@ namespace Helix {
             
             // this will load all of the required data and dump it into the model struct
             void LoadModel(std::string fileName, Model* m);
+            
+            glm::vec3 getBoundingBoxMin() const;
+            glm::vec3 getBoundingBoxMax() const;
+            
+            glm::vec3 m_boundingBoxMin;
+            glm::vec3 m_boundingBoxMax;
             
         private:
             void processNode(const aiScene* scene, aiNode* node, Model* m);
