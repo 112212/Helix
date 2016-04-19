@@ -601,8 +601,7 @@ void App::init()
         glBindVertexArray(0);
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
-        
-        
+
         //works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
         for(int i = 0; i < 8; ++i) {
             glm::vec3 transformedVector = glm::vec3(model3 * glm::vec4(glm::vec3(boundinxBoxVertices[i]), 1.0));
