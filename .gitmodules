@@ -1,0 +1,3 @@
+[submodule "src/Engine/GUI"]
+	path = src/Engine/GUI
+	url = https://github.com/112212/simple-gui-engine.git

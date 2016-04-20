@@ -1,4 +1,7 @@
 #include "App.hpp"
+#include "ngGui.hpp"
+#include "ngControl.hpp"
+#include "ngXmlLoader.hpp"
 
 App::App()
 {
@@ -40,6 +43,12 @@ void App::init()
     if(renderer == nullptr) {
         throw std::string("Failed to create renderer: ") + SDL_GetError();
     }
+    
+    ng::GuiEngine gui;
+    
+    ng::XmlLoader::LoadXml(gui, "gui.xml");
+    
+    
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -390,6 +399,9 @@ void App::init()
             }
         }
         
+        gui.OnEvent(e);
+        
+        
         
         glViewport(0, 0, this->getSizeX(), this->getSizeY());
         
@@ -434,6 +446,8 @@ void App::init()
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        
+        gui.Render(renderer);
         
         /*
         cursorRect.x = (this->getSizeX() / 2) - 8;
@@ -647,7 +661,8 @@ void App::init()
         
         //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         
-        //SDL_RenderPresent(renderer);
+        
+        // SDL_RenderPresent(renderer);
         SDL_GL_SwapWindow(window); 
 
         this->showFPS();
