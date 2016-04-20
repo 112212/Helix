@@ -645,11 +645,6 @@ void App::init()
         glUseProgram(0);
         glDisable(GL_BLEND);
         
-        
-        
-        
-        
-        
         //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         
         //SDL_RenderPresent(renderer);
