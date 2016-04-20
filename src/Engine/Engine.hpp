@@ -11,6 +11,8 @@
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <unordered_map>
+
 #include "Gui.hpp"
 #include "Shader.hpp"
 #include "Model.hpp"
@@ -25,6 +27,7 @@ namespace Helix {
             void Init();
             
             std::vector<he::Camera*> camera;
+            std::unordered_map<std::string, he::Shader*> shader;
             
         private:
             Engine();

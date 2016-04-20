@@ -509,7 +509,7 @@ namespace Helix {
         }
         
         glEnable(GL_DEPTH_TEST);
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
      
         //glUseProgram(shader);
         for(int x = 0; x < meshes.size(); x++) {
@@ -565,7 +565,7 @@ namespace Helix {
         }
         
         glDisable(GL_DEPTH_TEST);
-        //glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
         
         //glUseProgram(0);
     };

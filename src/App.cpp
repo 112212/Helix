@@ -179,7 +179,7 @@ void App::init()
                                            0, 2, 1, 3, 5, 7, 4, 6,
     };
     
-    glUseProgram(frustumShader.GetShader());
+    glUseProgram(engine->shader["frustumShader"]->GetShader());
     GLuint vao, vbo, vbos;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);  
@@ -188,7 +188,7 @@ void App::init()
     glBindVertexArray(0);
     glUseProgram(0);
 
-    glUseProgram(frustumShader.GetShader());
+    glUseProgram(engine->shader["frustumShader"]->GetShader());
     GLuint vao2, vbo2, vbos2;
     glGenVertexArrays(1, &vao2);
     glBindVertexArray(vao2);
@@ -210,7 +210,7 @@ void App::init()
     boundinxBoxVertices[6] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMin().z);
     boundinxBoxVertices[7] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMax().z);
     
-    glUseProgram(frustumShader.GetShader());
+    glUseProgram(engine->shader["frustumShader"]->GetShader());
     GLuint vao3, vbo3, vbos3;
     glGenVertexArrays(1, &vao3);
     glBindVertexArray(vao3);
