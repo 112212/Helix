@@ -28,7 +28,7 @@ namespace Helix {
             void InitBob(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX = 0, float posY = -2, float posZ = -2);
             */
             
-         private:
+        private:
             GLuint readShader(std::string shaderFile, GLenum shaderType);
             //move m_loadedShaders outside?
             //std::map<std::string,GLuint> m_loadedShaders;

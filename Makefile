@@ -8,11 +8,12 @@ link := $(link64bit)
 arch := 
 
 hpp :=	\
-		src/Engine/Engine.hpp							\
+#		src/Engine/Engine.hpp							\
 		
 cpp := 	\
 		src/Main.cpp									\
 		src/App.cpp										\
+		src/Engine/Engine.cpp							\
 		src/Engine/Gui.cpp								\
 		src/Engine/Shader.cpp							\
 		src/Engine/Model.cpp							\

@@ -1,7 +1,5 @@
 #include "App.hpp"
 
-namespace he = Helix;
-
 App::App()
 {
     m_sizeX = 800;
@@ -37,7 +35,6 @@ void App::init()
     if(window == nullptr) {
         throw std::string("Failed to create window: ") + SDL_GetError();
     }
-    
     
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if(renderer == nullptr) {
@@ -89,10 +86,11 @@ void App::init()
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_SetWindowGrab(window, SDL_TRUE);
     
-    float mouseScroll = 0.0;
+    he::Engine* engine = he::Engine::Instance();
+    engine->Init();
 
-    he::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
-    he::Camera camera2(camera.GetPosition());
+    //he::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+    //he::Camera camera2(camera[0]->GetPosition());
     
     /*
     he::Shader pyroShader("pyroShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
@@ -231,7 +229,8 @@ void App::init()
     bool toggleFullscreen = true;
     bool toggleWireframe = true;
     bool toggleCamera = true;
-    
+
+    float mouseScroll = 0.0;
     int skip = 0;
     
     bool running = true;
@@ -252,7 +251,7 @@ void App::init()
                 {
                     case SDLK_UP:
                     {
-                        //camera.ToggleLockY();
+                        //camera[0]->ToggleLockY();
                     }
                     break;
                     
@@ -400,36 +399,36 @@ void App::init()
         const Uint8 *state = SDL_GetKeyboardState(NULL);
         
         if(state[SDL_SCANCODE_W]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
+            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
         }
         
         if(state[SDL_SCANCODE_S]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
+            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
         }
         
         if(state[SDL_SCANCODE_A]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
+            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
         }
         
         if(state[SDL_SCANCODE_D]) {
-            camera.ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
+            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
         }
 
         
         if(state[SDL_SCANCODE_UP]) {
-            camera2.ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
+            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
         }
         
         if(state[SDL_SCANCODE_DOWN]) {
-            camera2.ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
+            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
         }
         
         if(state[SDL_SCANCODE_LEFT]) {
-            camera2.ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
+            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
         }
         
         if(state[SDL_SCANCODE_RIGHT]) {
-            camera2.ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
+            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
         }
         
 
@@ -451,11 +450,11 @@ void App::init()
         else {
             if(toggleMouseRelative) {
                 if(toggleCamera) {
-                    camera.ProcessMouseMovement(xpos, ypos);
-                    camera.ProcessMouseScroll(mouseScroll);
+                    engine->camera[0]->ProcessMouseMovement(xpos, ypos);
+                    engine->camera[0]->ProcessMouseScroll(mouseScroll);
                 } else {
-                    camera2.ProcessMouseMovement(xpos, ypos);
-                    camera2.ProcessMouseScroll(mouseScroll);
+                    engine->camera[1]->ProcessMouseMovement(xpos, ypos);
+                    engine->camera[1]->ProcessMouseScroll(mouseScroll);
                 }
             }
             else {
@@ -466,18 +465,18 @@ void App::init()
                 //std::cout << "x: " << xpos << " y: " << ypos << std::endl;
                 
                 /*
-                std::cout << "cam x: " << camera.GetPosition().x
-                          << " y: " << camera.GetPosition().y
-                          << " z: " << camera.GetPosition().z << std::endl;
+                std::cout << "cam x: " << camera[0]->GetPosition().x
+                          << " y: " << camera[0]->GetPosition().y
+                          << " z: " << camera[0]->GetPosition().z << std::endl;
                 */
             }
         }
         
-        glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
+        glm::mat4 view = engine->camera[0]->GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(engine->camera[0]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
 
-        glm::mat4 view2 = camera2.GetViewMatrix();
-        glm::mat4 projection2 = glm::perspective(glm::radians(camera2.GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);   
+        glm::mat4 view2 = engine->camera[1]->GetViewMatrix();
+        glm::mat4 projection2 = glm::perspective(glm::radians(engine->camera[1]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);   
         
         
         glm::mat4 model;
@@ -488,11 +487,11 @@ void App::init()
         /*
         glUseProgram(pyroShader.GetShader("pyroShader"));
         //remove argument [ pyroShader.GetShader(); ] ?
-        pyroShader.InitPyro("pyroShader", this->getTimeElapsed(), camera.GetPosition(), view, projection);
+        pyroShader.InitPyro("pyroShader", this->getTimeElapsed(), camera[0]->GetPosition(), view, projection);
         pyroModel.Draw(pyroShader.GetShader("pyroShader"));
         glUseProgram(0);
         glUseProgram(bobShader.GetShader("bobShader"));
-        bobShader.InitBob("bobShader", this->getTimeElapsed(), camera.GetPosition(), view, projection, 4);
+        bobShader.InitBob("bobShader", this->getTimeElapsed(), camera[0]->GetPosition(), view, projection, 4);
         bobModel.Draw(bobShader.GetShader("bobShader"));
         glUseProgram(0);
         */
@@ -526,11 +525,11 @@ void App::init()
         //test2.Draw(model3, view, projection);
         glUseProgram(0);
         
-        camera.ExtractFrustumPlanes(view, projection);
-        camera2.ExtractFrustumPlanes(view2, projection2);
+        engine->camera[0]->ExtractFrustumPlanes(view, projection);
+        engine->camera[1]->ExtractFrustumPlanes(view2, projection2);
         
         /*
-        if(camera2.PointInFrustum(glm::vec3(4.0f, -2.0f, -2.0f))) {
+        if(camera[1]->PointInFrustum(glm::vec3(4.0f, -2.0f, -2.0f))) {
             std::cout << "intersecting!" << std::endl;
         } else {
             std::cout << "out of frustum!" << std::endl;
@@ -545,7 +544,7 @@ void App::init()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &camera2.m_frustum_vertices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &engine->camera[1]->m_frustum_vertices, GL_DYNAMIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
         
@@ -572,7 +571,7 @@ void App::init()
         for(int i = 0; i < pointsPositions.size(); ++i) {
             glm::vec3 transformedVector = glm::vec3(identityModel2 * glm::vec4(glm::vec3(pointsPositions[i]), 1.0));
             
-            if(camera2.PointInFrustum(transformedVector)) {
+            if(engine->camera[1]->PointInFrustum(transformedVector)) {
                 pointsColors[i] = glm::vec3(0.0, 1.0, 0.0);
             } else {
                 pointsColors[i] = glm::vec3(1.0, 0.0, 0.0);
@@ -606,7 +605,7 @@ void App::init()
         for(int i = 0; i < 8; ++i) {
             glm::vec3 transformedVector = glm::vec3(model3 * glm::vec4(glm::vec3(boundinxBoxVertices[i]), 1.0));
             
-            if(camera2.PointInFrustum(transformedVector)) {
+            if(engine->camera[0]->PointInFrustum(transformedVector)) {
                 //std::cout << "vertex: " << i << " " << "in frustum! DRAW" << std::endl;
                 
                 glUseProgram(skeletalAnimShader.GetShader());

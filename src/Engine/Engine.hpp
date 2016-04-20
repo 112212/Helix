@@ -15,3 +15,21 @@
 #include "Shader.hpp"
 #include "Model.hpp"
 #include "Camera.hpp"
+
+namespace he = Helix;
+
+namespace Helix {
+    class Engine {
+        public:
+            static Engine* Instance();
+            void Init();
+            
+            std::vector<he::Camera*> camera;
+            
+        private:
+            Engine();
+            ~Engine();
+            
+            static Engine* m_instance;
+    };
+}

@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+namespace he = Helix;
+
 class App {
     public:
         App();
