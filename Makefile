@@ -29,9 +29,9 @@ obj := $(addprefix $(build)/, $(patsubst %.cpp,%.o,$(cpp)))
 
 .phony: make_dirs
 
-all: make_dirs make_gui $(exe)
+all: make_dirs src/Engine/GUI/libgui.a $(exe)
 
-clean: clean_gui
+clean:
 	find $(build) -type f -name *.o -exec rm {} \;
 
 make_dirs:
@@ -43,8 +43,8 @@ make_dirs:
 clean_gui:
 	cd src/Engine/GUI/ && make clean
 	
-make_gui:
-	cd src/Engine/GUI/ && make sdl_lib
+src/Engine/GUI/libgui.a:
+	+make -C src/Engine/GUI/ sdl_lib
 
 $(exe): $(obj)
 	g++ $^ -o $(exe) $(link) $(arch) -pthread 
