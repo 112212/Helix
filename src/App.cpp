@@ -40,7 +40,7 @@ void App::init()
     if(renderer == nullptr) {
         throw std::string("Failed to create renderer: ") + SDL_GetError();
     }
-    
+     
     Drawing::SetResolution(this->getSizeX(), this->getSizeY());
     Drawing::Init();
     
