@@ -19,8 +19,9 @@
 #include "Camera.hpp"
 
 #include "Gui.hpp"
-#include "Control.hpp"
 #include "XmlLoader.hpp"
+#include "Control.hpp"
+#include "controls/TrackBar.hpp"
 #include "common/SDL/Drawing.hpp"
 
 namespace he = Helix;

@@ -488,8 +488,8 @@ namespace Helix {
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
             meshes[x].boneAttribute = glGetAttribLocation(shader, "boneID");
             glEnableVertexAttribArray(meshes[x].boneAttribute);
-            glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
-            //glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+            //glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
+            glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
      
             meshes[x].modelID = glGetUniformLocation(shader, "model");
             meshes[x].viewID = glGetUniformLocation(shader, "view");

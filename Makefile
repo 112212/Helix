@@ -14,7 +14,6 @@ cpp := 	\
 		src/Main.cpp									\
 		src/App.cpp										\
 		src/Engine/Engine.cpp							\
-		src/Engine/Gui.cpp								\
 		src/Engine/Shader.cpp							\
 		src/Engine/Model.cpp							\
 		src/Engine/Camera.cpp							\
