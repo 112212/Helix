@@ -1,7 +1,4 @@
 #include "App.hpp"
-#include "ngGui.hpp"
-#include "ngControl.hpp"
-#include "ngXmlLoader.hpp"
 
 App::App()
 {
@@ -44,11 +41,12 @@ void App::init()
         throw std::string("Failed to create renderer: ") + SDL_GetError();
     }
     
+    Drawing::SetResolution(this->getSizeX(), this->getSizeY());
+    Drawing::Init();
+    
     ng::GuiEngine gui;
     
     ng::XmlLoader::LoadXml(gui, "gui.xml");
-    
-    
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -447,7 +445,7 @@ void App::init()
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         
-        gui.Render(renderer);
+        //gui.Render(renderer);
         
         /*
         cursorRect.x = (this->getSizeX() / 2) - 8;
@@ -660,7 +658,6 @@ void App::init()
         glDisable(GL_BLEND);
         
         //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
-        
         
         // SDL_RenderPresent(renderer);
         SDL_GL_SwapWindow(window); 

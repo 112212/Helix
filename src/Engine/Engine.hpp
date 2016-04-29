@@ -13,10 +13,15 @@
 
 #include <unordered_map>
 
-#include "Gui.hpp"
+//#include "Gui.hpp"
 #include "Shader.hpp"
 #include "Model.hpp"
 #include "Camera.hpp"
+
+#include "Gui.hpp"
+#include "Control.hpp"
+#include "XmlLoader.hpp"
+#include "common/SDL/Drawing.hpp"
 
 namespace he = Helix;
 
