@@ -4,8 +4,6 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
 
-in vec3 boneIDD;
-
 out vec4 color;
 
 uniform vec3 lightPos;
@@ -45,5 +43,4 @@ void main() {
     //vec3 result = vec3(1.0f, 1.0f, 1.0f);
     
     color = vec4(result, 1.0f);
-    //color = vec4(boneIDD, 1.0f);
 }

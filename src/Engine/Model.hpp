@@ -36,7 +36,7 @@ namespace Helix {
             std::vector<glm::vec2> uvs;
             std::vector<glm::vec3> normals;
             std::vector<glm::vec4> weights;
-            std::vector<glm::vec4> boneID;
+            std::vector<glm::ivec4> boneID;
 
             glm::mat4 baseModelMatrix;
  

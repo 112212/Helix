@@ -116,16 +116,14 @@ void App::init()
     
     he::ModelLoader loader;
     
+    /*
     he::Model test(skeletalAnimShader.GetShader());
     loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &test);
     //test.SetModelTrans(transformBob);
-    
-    /*
-    he::Model test2(skeletalAnimShader.GetShader());
-    loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &test2);
     */
     
-    
+    he::Model test2(skeletalAnimShader.GetShader());
+    loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &test2);
     //test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
     
     //add scale and rotate methods, and then after translation and/or rotation, scale by:
@@ -516,7 +514,7 @@ void App::init()
         glUseProgram(0);
         */
         
-        
+        /*
         test.tick(this->getTimeElapsed());
         glUseProgram(skeletalAnimShaderVisual.GetShader());
         //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -527,7 +525,7 @@ void App::init()
         glUseProgram(skeletalAnimShader.GetShader());
         test.Draw(model, view, projection);
         glUseProgram(0);
-        
+        */
 
         glm::mat4 model2;
         model2 = glm::translate(model2, glm::vec3(4.0f, -2.0f, -20.0f));
@@ -621,7 +619,7 @@ void App::init()
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
         
-        /*
+        
         //works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
         for(int i = 0; i < 8; ++i) {
             glm::vec3 transformedVector = glm::vec3(model3 * glm::vec4(glm::vec3(boundinxBoxVertices[i]), 1.0));
@@ -665,7 +663,7 @@ void App::init()
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
         glDisable(GL_BLEND);
-        */
+        
         
         //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
         

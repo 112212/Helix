@@ -178,7 +178,7 @@ namespace Helix {
         tempMesh.weights.resize(mesh->mNumVertices);
             std::fill(tempMesh.weights.begin(), tempMesh.weights.end(), glm::vec4(0.0f));
         tempMesh.boneID.resize(mesh->mNumVertices);
-            std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::vec4(0.0f));
+            std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::ivec4(0));
      
         tempMesh.baseModelMatrix = toMat4(&node->mTransformation);
         if(node->mParent != NULL) {
@@ -453,7 +453,7 @@ namespace Helix {
      
             glGenBuffers(1, &meshes[x].idbo);
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * meshes[x].boneID.size(), &meshes[x].boneID[0], GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::ivec4) * meshes[x].boneID.size(), &meshes[x].boneID[0], GL_STATIC_DRAW);
      
             glGenTextures(1, &meshes[x].tex);
             glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
@@ -488,8 +488,8 @@ namespace Helix {
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
             meshes[x].boneAttribute = glGetAttribLocation(shader, "boneID");
             glEnableVertexAttribArray(meshes[x].boneAttribute);
-            //glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
-            glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+            //glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+            glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
      
             meshes[x].modelID = glGetUniformLocation(shader, "model");
             meshes[x].viewID = glGetUniformLocation(shader, "view");
