@@ -15,7 +15,7 @@ namespace Helix {
         Assimp::Importer importer;
         
         // set maximum 4 bones per vertex (4 is also default value)
-        importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4);
+        //importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4);
         
         const aiScene* scene = importer.ReadFile(fileName,
             aiProcess_Triangulate |
@@ -42,8 +42,8 @@ namespace Helix {
         }
         
         // some debug stuff, delete later
-        std::cout << "Number of total meshes: " << scene->mNumMeshes << std::endl;
-        std::cout << "Animations: " << scene->HasAnimations() << std::endl;
+        //std::cout << "Number of total meshes: " << scene->mNumMeshes << std::endl;
+        //std::cout << "Animations: " << scene->HasAnimations() << std::endl;
         
          // set 64 bones to identity, 64 is current limit, might increase it later
         processAnimations(scene, m);
@@ -60,7 +60,7 @@ namespace Helix {
         m->modelLoaded = true;
         
         m->init();
-    };
+    }
      
     void ModelLoader::processAnimations(const aiScene* scene, Model* m)
     {
@@ -103,40 +103,11 @@ namespace Helix {
      
             m->animations[m->currentAnim].root.name = "rootBoneTreeNode";
         }
-    };
-     
-    void Model::Animation::buildBoneTree(const aiScene* scene, aiNode* node, BoneNode* bNode, Model* m)
-    {
-        if(scene->HasAnimations()) {
-            // found the node
-            if(m->boneID.find(node->mName.data) != m->boneID.end()) {
-                std::cout << "Found a bone node: " << node->mName.data << std::endl;
-                BoneNode tempNode;
-                tempNode.name = node->mName.data;
-                tempNode.parent = bNode;
-                tempNode.nodeTransform = toMat4(&node->mTransformation);
-                // bones and their nodes always share the same name
-                tempNode.boneTransform = boneOffset[tempNode.name];
-                bNode->children.push_back(tempNode);
-            }
-     
-            if(node->mNumChildren > 0) {
-                for(unsigned int x = 0; x < node->mNumChildren; x++) {
-                    // if the node we just found was a bone node then pass it in (current bone node child vector size - 1)
-                    if(m->boneID.find(node->mName.data) != m->boneID.end()) {
-                        buildBoneTree(scene, node->mChildren[x], &bNode->children[bNode->children.size() - 1], m);
-                    }
-                    else {
-                        buildBoneTree(scene, node->mChildren[x], bNode, m);
-                    }
-                }
-            }
-        }
-    };
+    }
      
     void ModelLoader::processNode(const aiScene* scene, aiNode* node, Model* m)
     {
-        std::cout << "Processing a node: " << node->mName.C_Str() << std::endl; //debug
+        //std::cout << "Processing a node: " << node->mName.C_Str() << std::endl; //debug
 
         // cycle through each mesh within this node
         if(node->mNumMeshes > 0) {
@@ -146,9 +117,11 @@ namespace Helix {
             }
         }
         
+        /*
         if(m->boneID.find(node->mName.data) != m->boneID.end()) {
             std::cout << node->mName.data << " IS A BONE NODE!!!!";
         }
+        */
 
         // then go through each child in the node and process them as well
         if(node->mNumChildren > 0) {
@@ -156,29 +129,19 @@ namespace Helix {
                 processNode(scene, node->mChildren[x], m);
             }
         }
-    };
-    
-    glm::vec3 ModelLoader::getBoundingBoxMin() const
-    {
-        return m_boundingBoxMin;
-    }
-    
-    glm::vec3 ModelLoader::getBoundingBoxMax() const
-    {
-        return m_boundingBoxMax;
     }
      
     // add some error handling (not all models have uvs, etc)
     void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, Model* m)
     {
-        std::cout << "Processing a mesh: " << mesh->mName.C_Str() << std::endl; //debug
-        std::cout << "Has bones? " << mesh->mNumBones << std::endl;
+        //std::cout << "Processing a mesh: " << mesh->mName.C_Str() << std::endl; //debug
+        //std::cout << "Has bones? " << mesh->mNumBones << std::endl;
      
         Model::Mesh tempMesh;
         tempMesh.weights.resize(mesh->mNumVertices);
             std::fill(tempMesh.weights.begin(), tempMesh.weights.end(), glm::vec4(0.0f));
         tempMesh.boneID.resize(mesh->mNumVertices);
-            std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::ivec4(0));
+            std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::vec4(0.0f));
      
         tempMesh.baseModelMatrix = toMat4(&node->mTransformation);
         if(node->mParent != NULL) {
@@ -194,13 +157,13 @@ namespace Helix {
             tempV.z = mesh->mVertices[x].z;
             tempMesh.vertices.push_back(tempV); 
             
-            if(mesh->mVertices[x].x < m_boundingBoxMin.x) m_boundingBoxMin.x = mesh->mVertices[x].x;
-            if(mesh->mVertices[x].y < m_boundingBoxMin.y) m_boundingBoxMin.y = mesh->mVertices[x].y;
-            if(mesh->mVertices[x].z < m_boundingBoxMin.z) m_boundingBoxMin.z = mesh->mVertices[x].z;
+            if(mesh->mVertices[x].x < m->m_boundingBoxMin.x) m->m_boundingBoxMin.x = mesh->mVertices[x].x;
+            if(mesh->mVertices[x].y < m->m_boundingBoxMin.y) m->m_boundingBoxMin.y = mesh->mVertices[x].y;
+            if(mesh->mVertices[x].z < m->m_boundingBoxMin.z) m->m_boundingBoxMin.z = mesh->mVertices[x].z;
             
-            if(mesh->mVertices[x].x > m_boundingBoxMax.x) m_boundingBoxMax.x = mesh->mVertices[x].x;
-            if(mesh->mVertices[x].y > m_boundingBoxMax.y) m_boundingBoxMax.y = mesh->mVertices[x].y;
-            if(mesh->mVertices[x].z > m_boundingBoxMax.z) m_boundingBoxMax.z = mesh->mVertices[x].z;
+            if(mesh->mVertices[x].x > m->m_boundingBoxMax.x) m->m_boundingBoxMax.x = mesh->mVertices[x].x;
+            if(mesh->mVertices[x].y > m->m_boundingBoxMax.y) m->m_boundingBoxMax.y = mesh->mVertices[x].y;
+            if(mesh->mVertices[x].z > m->m_boundingBoxMax.z) m->m_boundingBoxMax.z = mesh->mVertices[x].z;
 
             // load the uvs (if they exist)
             if(mesh->mTextureCoords[0]) {
@@ -231,15 +194,15 @@ namespace Helix {
         if(scene->HasMaterials()) {
             // so that we don't have to type out that whole thing every time
             aiMaterial* mat = scene->mMaterials[mesh->mMaterialIndex];
-            std::cout << "Has diffuse texture: " << mat->GetTextureCount(aiTextureType_DIFFUSE) << std::endl;
-            std::cout << "Has specular texture: " << mat->GetTextureCount(aiTextureType_SPECULAR) << std::endl;
+            //std::cout << "Has diffuse texture: " << mat->GetTextureCount(aiTextureType_DIFFUSE) << std::endl;
+            //std::cout << "Has specular texture: " << mat->GetTextureCount(aiTextureType_SPECULAR) << std::endl;
             
             // add optimization to not to load textures, those were already loaded, store in a vector in ModelLoader,
             // so it holds all textures withing different models
             if(mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
                 aiString texturePath;
                 mat->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath);
-                std::cout << texturePath.C_Str() << std::endl;
+                //std::cout << texturePath.C_Str() << std::endl;
      
                 std::string textureFileName = m->rootPath + texturePath.C_Str();
                 
@@ -307,15 +270,55 @@ namespace Helix {
             }
         }
         m->meshes.push_back(tempMesh);
-    };
+    }
+    
+    void Model::Animation::buildBoneTree(const aiScene* scene, aiNode* node, BoneNode* bNode, Model* m)
+    {
+        if(scene->HasAnimations()) {
+            // found the node
+            if(m->boneID.find(node->mName.data) != m->boneID.end()) {
+                //std::cout << "Found a bone node: " << node->mName.data << std::endl;
+                
+                BoneNode tempNode;
+                tempNode.name = node->mName.data;
+                tempNode.parent = bNode;
+                tempNode.nodeTransform = toMat4(&node->mTransformation);
+                // bones and their nodes always share the same name
+                tempNode.boneTransform = boneOffset[tempNode.name];
+                bNode->children.push_back(tempNode);
+            }
+     
+            if(node->mNumChildren > 0) {
+                for(unsigned int x = 0; x < node->mNumChildren; x++) {
+                    // if the node we just found was a bone node then pass it in (current bone node child vector size - 1)
+                    if(m->boneID.find(node->mName.data) != m->boneID.end()) {
+                        buildBoneTree(scene, node->mChildren[x], &bNode->children[bNode->children.size() - 1], m);
+                    }
+                    else {
+                        buildBoneTree(scene, node->mChildren[x], bNode, m);
+                    }
+                }
+            }
+        }
+    }
+    
+    glm::vec3 Model::getBoundingBoxMin() const
+    {
+        return m_boundingBoxMin;
+    }
+    
+    glm::vec3 Model::getBoundingBoxMax() const
+    {
+        return m_boundingBoxMax;
+    }
      
     // there is a bug with interpolation
-    void Model::tick(double time)
+    void Model::SetTick(double time)
     {
         double timeInTicks = time * animations[currentAnim].ticksPerSecond;
      
         updateBoneTree(timeInTicks, &animations[currentAnim].root, glm::mat4(1.0f));
-    };
+    }
      
     void Model::updateBoneTree(double timeInTicks, Model::Animation::BoneNode* node, glm::mat4 parentTransform)
     {
@@ -360,8 +363,7 @@ namespace Helix {
         glm::vec3 scaling((GLfloat)aiScale.x, (GLfloat)aiScale.y, (GLfloat)aiScale.z);
         glm::quat rotation((GLfloat)aiRotation.w, (GLfloat)aiRotation.x, (GLfloat)aiRotation.y, (GLfloat)aiRotation.z);
      
-        glm::mat4 finalModel =
-               parentTransform
+        glm::mat4 finalModel = parentTransform
             * glm::translate(glm::mat4(1.0f), translation)
             * glm::mat4_cast(rotation)
             * glm::scale(glm::mat4(1.0f), scaling);
@@ -372,16 +374,14 @@ namespace Helix {
         for(int x = 0; x < node->children.size(); x++) {
             updateBoneTree(timeInTicks, &node->children[x], finalModel);
         }
-    };
+    }
     
     Model::Model() {}
      
-    Model::Model(GLuint shaderProg)
+    Model::Model(GLuint shader) : modelLoaded(false)
     {
-        shader = shaderProg;
-        
-        modelLoaded = false;
-    };
+        m_shader = shader;
+    }
     
     Model::~Model() {}
     
@@ -389,11 +389,6 @@ namespace Helix {
     {
         if(!modelLoaded) {
             throw std::string("Please load in a model before initializing buffers.");
-        }
-
-        for(auto const &it : boneID) {
-            std::cout << "(bones:" << boneID.size() << ") name: " << it.first
-                                                       << " uint: " << it.second << std::endl;
         }
      
         // loop through each mesh and initialize them
@@ -418,15 +413,6 @@ namespace Helix {
             else {
                  throw std::string("Image is not truecolor!");
             }
-            
-            
-            for(int k = 0; k < meshes[x].boneID.size(); k++) {
-                std::cout << "mesh id: " << x << " (verts:" << meshes[x].boneID.size() << ") has boneID:" << " x: " << meshes[x].boneID[k].x
-                                                       << " y: " << meshes[x].boneID[k].y
-                                                       << " z: " << meshes[x].boneID[k].z
-                                                       << " w: " << meshes[x].boneID[k].w << std::endl;
-            }
-            
             
             glGenVertexArrays(1, &meshes[x].vao);
             glBindVertexArray(meshes[x].vao);
@@ -453,7 +439,7 @@ namespace Helix {
      
             glGenBuffers(1, &meshes[x].idbo);
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::ivec4) * meshes[x].boneID.size(), &meshes[x].boneID[0], GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * meshes[x].boneID.size(), &meshes[x].boneID[0], GL_STATIC_DRAW);
      
             glGenTextures(1, &meshes[x].tex);
             glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
@@ -462,51 +448,72 @@ namespace Helix {
 
             // tex data bound to uniform
             // not needed?
-            //glUniform1i(glGetUniformLocation(shader, "texture_diffuse"), 0);
+            //glUniform1i(glGetUniformLocation(m_shader, "texture_diffuse"), 0);
             
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].vbo);
-            meshes[x].posAttribute = glGetAttribLocation(shader, "position");
+            meshes[x].posAttribute = glGetAttribLocation(m_shader, "position");
             glEnableVertexAttribArray(meshes[x].posAttribute);
             glVertexAttribPointer(meshes[x].posAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
             
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].nbo);
-            meshes[x].normalAttribute = glGetAttribLocation(shader, "normal");
+            meshes[x].normalAttribute = glGetAttribLocation(m_shader, "normal");
             glEnableVertexAttribArray(meshes[x].normalAttribute);
             glVertexAttribPointer(meshes[x].normalAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
             
             // now send uv data
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].uvb);
-            meshes[x].texAttribute = glGetAttribLocation(shader, "texCoords");
+            meshes[x].texAttribute = glGetAttribLocation(m_shader, "texCoords");
             glEnableVertexAttribArray(meshes[x].texAttribute);
             glVertexAttribPointer(meshes[x].texAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
             
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].wbo);
-            meshes[x].weightAttribute = glGetAttribLocation(shader, "weight");
+            meshes[x].weightAttribute = glGetAttribLocation(m_shader, "weight");
             glEnableVertexAttribArray(meshes[x].weightAttribute);
             glVertexAttribPointer(meshes[x].weightAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
      
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
-            meshes[x].boneAttribute = glGetAttribLocation(shader, "boneID");
+            meshes[x].boneAttribute = glGetAttribLocation(m_shader, "boneID");
             glEnableVertexAttribArray(meshes[x].boneAttribute);
-            //glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
-            glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
+            glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+            //glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
      
-            meshes[x].modelID = glGetUniformLocation(shader, "model");
-            meshes[x].viewID = glGetUniformLocation(shader, "view");
-            meshes[x].projectionID = glGetUniformLocation(shader, "projection");
-            meshes[x].transID = glGetUniformLocation(shader, "boneTransformation");
-            meshes[x].modelTransID = glGetUniformLocation(shader, "modelTransform");
+            meshes[x].modelID = glGetUniformLocation(m_shader, "model");
+            meshes[x].viewID = glGetUniformLocation(m_shader, "view");
+            meshes[x].projectionID = glGetUniformLocation(m_shader, "projection");
+            meshes[x].transID = glGetUniformLocation(m_shader, "boneTransformation");
+            meshes[x].modelTransID = glGetUniformLocation(m_shader, "modelTransform");
      
             glBindVertexArray(0);
         }
-    };
+        
+        m_boundingBoxVertices[0] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMin().y, this->getBoundingBoxMin().z);
+        m_boundingBoxVertices[1] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMin().y, this->getBoundingBoxMax().z);
+        m_boundingBoxVertices[2] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMax().y, this->getBoundingBoxMin().z);
+        m_boundingBoxVertices[3] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMax().y, this->getBoundingBoxMax().z);
+        m_boundingBoxVertices[4] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMin().y, this->getBoundingBoxMin().z);
+        m_boundingBoxVertices[5] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMin().y, this->getBoundingBoxMax().z);
+        m_boundingBoxVertices[6] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMax().y, this->getBoundingBoxMin().z);
+        m_boundingBoxVertices[7] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMax().y, this->getBoundingBoxMax().z);
+    }
     
-    // this is just a generic render function for quick and easy rendering
     void Model::Draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
     {
+        this->drawModel(model, view, projection, m_shader);
+    }
+    
+    void Model::Draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader)
+    {
+        this->drawModel(model, view, projection, shader);
+    }
+
+    // this is just a generic render function for quick and easy rendering
+    void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader)
+    {
         if(!modelLoaded) {
-            throw std::string("Please load in a model before trying to render one.");
+            throw std::string("Model could not be rendered.");
         }
+        
+        glUseProgram(shader);
         
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -521,7 +528,7 @@ namespace Helix {
             glUniformMatrix4fv(meshes[x].projectionID, 1, GL_FALSE, glm::value_ptr(projection));
             
             // clean hasAnimation
-            //GLint hasAnimation = glGetUniformLocation(shader, "hasAnimation");
+            //GLint hasAnimation = glGetUniformLocation(m_shader, "hasAnimation");
             if(meshes[x].hasAnimation) {
                 glUniformMatrix4fv(meshes[x].transID, animations[currentAnim].boneTrans.size(), GL_FALSE, (GLfloat*)&animations[currentAnim].boneTrans[0][0]);
                 glUniformMatrix4fv(meshes[x].modelTransID, 1, GL_FALSE, (GLfloat*)&modelTrans[0][0]);
@@ -567,13 +574,88 @@ namespace Helix {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         
-        //glUseProgram(0);
-    };
+        glUseProgram(0);
+    }
+    
+    std::vector<glm::vec3> Model::GetBoundingBoxVertices()
+    {
+        std::vector<glm::vec3> bbox;
+        bbox.push_back(m_boundingBoxVertices[0]);
+        bbox.push_back(m_boundingBoxVertices[1]);
+        bbox.push_back(m_boundingBoxVertices[2]);
+        bbox.push_back(m_boundingBoxVertices[3]);
+        bbox.push_back(m_boundingBoxVertices[4]);
+        bbox.push_back(m_boundingBoxVertices[5]);
+        bbox.push_back(m_boundingBoxVertices[6]);
+        bbox.push_back(m_boundingBoxVertices[7]);
+        
+        return bbox;
+    }
+    
+    void Model::DrawBoundingBox(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader)
+    {   
+        GLubyte indices[] = {0, 1, 1, 5, 5, 4, 4, 0,
+                             2, 3, 3, 7, 7, 6, 6, 2,
+                             0, 2, 1, 3, 5, 7, 4, 6,
+        };
+        
+        GLfloat colors[] = {1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+        };
+        
+        glUseProgram(shader);
+        
+        glEnable(GL_PROGRAM_POINT_SIZE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        GLuint vao_0, vbo_0, vbo_1;
+        
+        glGenVertexArrays(1, &vao_0);
+        glGenBuffers(1, &vbo_0);
+        glGenBuffers(1, &vbo_1);
+        
+        glBindVertexArray(vao_0);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_0);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * this->GetBoundingBoxVertices().size(), &this->GetBoundingBoxVertices()[0], GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_1);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        
+        glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        
+        //glDrawArrays(GL_POINTS, 0, 8);
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_BYTE, indices);
+    
+        glBindVertexArray(0);
+        
+        glDeleteVertexArrays(1, &vao_0);
+        glDeleteBuffers(1, &vbo_0);
+        glDeleteBuffers(1, &vbo_1);
+        
+        glDisable(GL_PROGRAM_POINT_SIZE);
+        glDisable(GL_BLEND);
+        
+        glUseProgram(0);  
+    }
      
     void Model::SetModelTrans(glm::mat4 in)
     {
          modelTrans = in;
-    };
+    }
      
     glm::mat4 toMat4(aiMatrix4x4* ai)
     {

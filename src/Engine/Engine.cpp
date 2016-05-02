@@ -19,9 +19,6 @@ namespace Helix {
     
     void Engine::Init()
     {
-        camera.emplace_back(new he::Camera(glm::vec3(0.0f, 0.0f, 0.0f)));
-        camera.emplace_back(new he::Camera(this->camera[0]->GetPosition()));
-        
-        shader.emplace("frustumShader", new he::Shader("../Assets/Shaders/frustum.vs", "../Assets/Shaders/frustum.fs"));
+ 
     }
 }

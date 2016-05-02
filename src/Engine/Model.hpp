@@ -36,7 +36,7 @@ namespace Helix {
             std::vector<glm::vec2> uvs;
             std::vector<glm::vec3> normals;
             std::vector<glm::vec4> weights;
-            std::vector<glm::ivec4> boneID;
+            std::vector<glm::vec4> boneID;
 
             glm::mat4 baseModelMatrix;
  
@@ -91,23 +91,34 @@ namespace Helix {
         // map of bones
         std::map<std::string, unsigned int> boneID;
         // runs every frame
-        void tick(double time);
+        void SetTick(double time);
         void updateBoneTree(double time, Animation::BoneNode* node, glm::mat4 transform);
             
         glm::mat4 modelTrans;
         //GLuint modelTransID; moved to mesh
        
         std::string rootPath;
+        
+        glm::vec3 m_boundingBoxVertices[8];
+        
+        glm::vec3 getBoundingBoxMin() const;
+        glm::vec3 getBoundingBoxMax() const;
+        
+        glm::vec3 m_boundingBoxMin;
+        glm::vec3 m_boundingBoxMax;
  
         //todo: make init and render optional
         std::vector<Mesh> meshes;
-        GLuint shader;
+        GLuint m_shader;
         bool modelLoaded;
         
         void init();
+        std::vector<glm::vec3> GetBoundingBoxVertices();
+        
+        void Draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader);
         void Draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection);
-        
-        
+        void drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader);
+        void DrawBoundingBox(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader);
     };
  
     class ModelLoader
@@ -118,12 +129,6 @@ namespace Helix {
             
             // this will load all of the required data and dump it into the model struct
             void LoadModel(std::string fileName, Model* m);
-            
-            glm::vec3 getBoundingBoxMin() const;
-            glm::vec3 getBoundingBoxMax() const;
-            
-            glm::vec3 m_boundingBoxMin;
-            glm::vec3 m_boundingBoxMax;
             
         private:
             void processNode(const aiScene* scene, aiNode* node, Model* m);

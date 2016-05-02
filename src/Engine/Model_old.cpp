@@ -130,7 +130,7 @@ namespace Helix {
         return textures;
     }
     
-    GLint Model::textureFromFile(std::string path)
+    GLuint Model::textureFromFile(std::string path)
     {
         std::string filename = m_directory + '/' + path;
  

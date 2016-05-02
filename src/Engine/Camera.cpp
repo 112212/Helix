@@ -173,6 +173,82 @@ namespace Helix {
         m_frustum_vertices[7] = glm::vec3(threePlanesIntersectionPoint(m_frustum_planes[1], m_frustum_planes[2], m_frustum_planes[5]));
     }
     
+    void Camera::DrawFrustum(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader)
+    {
+        GLubyte indicesFrustum[] = {1, 0, 4,
+                                    1, 4, 5,
+                                    1, 5, 6,
+                                    1, 6, 2,
+                                    2, 6, 3,
+                                    3, 6, 7,
+                                    3, 7, 4,
+                                    3, 0, 4,
+                                    /*
+                                    0, 1, 2,
+                                    0, 2, 3,
+                                    4, 5, 6,
+                                    4, 6, 7,
+                                    */         
+        };
+        
+        GLubyte indicesFrustumOutline[] = {0, 1, 1, 2, 2, 3, 3, 0,
+                                           4, 5, 5, 6, 6, 7, 7, 4,
+                                           0, 4, 1, 5, 2, 6, 3, 7,                    
+        };
+
+        GLfloat colors[] = {1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+                            1.0, 1.0, 1.0,
+        };
+        
+        glUseProgram(shader);
+        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        GLuint vao_0, vbo_0, vbo_1;
+        
+        glGenVertexArrays(1, &vao_0);
+        glGenBuffers(1, &vbo_0);
+        glGenBuffers(1, &vbo_1);
+        
+        glBindVertexArray(vao_0);
+                
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_0);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &this->m_frustum_vertices, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_1);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+
+        glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        
+        //glUniform3f(glGetUniformLocation(frustumShader.GetShader(), "inColor2"), 0.0, 0.0, 1.0);
+ 
+        glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_BYTE, indicesFrustum);
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_BYTE, indicesFrustumOutline);
+        glBindVertexArray(0);
+        
+        glDeleteVertexArrays(1, &vao_0);
+        glDeleteBuffers(1, &vbo_0);
+        glDeleteBuffers(1, &vbo_1);
+
+        glDisable(GL_BLEND);
+        
+        glUseProgram(0);
+      
+    }
+    
     void Camera::PrintFrustumVerticesPositions()
     {
         std::cout << "NEAR PLANE" << std::endl;

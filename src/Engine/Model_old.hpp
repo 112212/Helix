@@ -33,7 +33,7 @@ namespace Helix {
             void processNode(aiNode* node, const aiScene* scene);
             Mesh processMesh(aiMesh* mesh, const aiScene* scene);
             std::vector<Mesh::Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
-            GLint textureFromFile(std::string path);
+            GLuint textureFromFile(std::string path);
             glm::mat4 aiMat4toGLM(aiMatrix4x4* ai);
         
             std::vector<Mesh::Texture> m_textures_loaded; 

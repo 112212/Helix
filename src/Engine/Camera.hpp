@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
@@ -40,6 +41,7 @@ namespace Helix {
             bool PointInFrustum(glm::vec3 center);
             bool SphereInFrustum(glm::vec3 center, float radius);
             void PrintFrustumVerticesPositions();
+            void DrawFrustum(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader);
             
             glm::vec3 m_frustum_vertices[8];
             

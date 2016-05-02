@@ -24,7 +24,6 @@ App::~App() {}
 void App::init()
 {
     SDL_Window* window;
-    SDL_Renderer* renderer;
     SDL_GLContext glContext;
  
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
@@ -35,13 +34,6 @@ void App::init()
     if(window == nullptr) {
         throw std::string("Failed to create window: ") + SDL_GetError();
     }
-    
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if(renderer == nullptr) {
-        throw std::string("Failed to create renderer: ") + SDL_GetError();
-    }
-     
-    
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -67,23 +59,18 @@ void App::init()
     glewExperimental = GL_TRUE; 
     glewInit();
     
-    ng::Drawing::SetResolution(this->getSizeX(), this->getSizeY());
-    ng::Drawing::Init();
+    std::cout << "Vendor:     " << glGetString(GL_VENDOR) << std::endl;
+    std::cout << "Renderer:   " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "Version:    " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "GLSL:       " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     
-    ng::GuiEngine gui;
-    
-    ng::XmlLoader::LoadXml(gui, "gui.xml");
-    
-    printf("Vendor:   %s\n", glGetString(GL_VENDOR));
-    printf("Renderer: %s\n", glGetString(GL_RENDERER));
-    printf("Version:  %s\n", glGetString(GL_VERSION));
-    printf("GLSL:  %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-    
+    /*
     int depthSize;
     int stencilSize;
     SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depthSize);
     SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencilSize);
     std::cout << "Depth buffer: " << depthSize << " Stencil buffer: " << stencilSize << std::endl;
+    */
 
     //SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
     //SDL_WarpMouseInWindow(window, this->getSizeX() / 2, this->getSizeY() / 2);
@@ -95,11 +82,28 @@ void App::init()
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_SetWindowGrab(window, SDL_TRUE);
     
+    ng::Drawing::SetResolution(this->getSizeX(), this->getSizeY());
+    ng::Drawing::Init();
+    
     he::Engine* engine = he::Engine::Instance();
-    engine->Init();
-
-    //he::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
-    //he::Camera camera2(camera[0]->GetPosition());
+    //engine->Init();
+    
+    engine->gui = new ng::GuiEngine;
+    ng::XmlLoader::LoadXml(*(engine->gui), "gui.xml");
+    
+    float trackbarValue1 = 0;
+    engine->gui->SubscribeEvent("1", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {  
+        ng::TrackBar* p = (ng::TrackBar*)c;
+        trackbarValue1 = p->GetValue() / 100.0;
+    });
+    
+    float trackbarValue2 = 0;
+    engine->gui->SubscribeEvent("2", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {
+        ng::TrackBar* p = (ng::TrackBar*)c;
+        trackbarValue2 = p->GetValue() / 10.0;
+        
+        std::cout << "p->GetValue(): " << p->GetValue() << std::endl;
+    });
     
     /*
     he::Shader pyroShader("pyroShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
@@ -109,44 +113,34 @@ void App::init()
     he::Model bobModel("../Assets/Models/guard/boblampclean.md5mesh");
     */
     
+    /*
     he::Shader frustumShader("../Assets/Shaders/frustum.vs", "../Assets/Shaders/frustum.fs");
     
     he::Shader skeletalAnimShader("../Assets/Shaders/test_03.vs", "../Assets/Shaders/test_03.fs");
     he::Shader skeletalAnimShaderVisual("../Assets/Shaders/test_03_visual.vs", "../Assets/Shaders/test_03_visual.fs", "../Assets/Shaders/test_03_visual.gs");
-    
-    he::ModelLoader loader;
-    
-    /*
-    he::Model test(skeletalAnimShader.GetShader());
-    loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &test);
-    //test.SetModelTrans(transformBob);
     */
     
-    he::Model test2(skeletalAnimShader.GetShader());
-    loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &test2);
+    engine->camera.emplace_back(new he::Camera(glm::vec3(0.0f, 0.0f, 0.0f)));
+    engine->camera.emplace_back(new he::Camera(engine->camera[0]->GetPosition()));
+
+    engine->shader.emplace("frustum_bbox", new he::Shader("../Assets/Shaders/frustum.vs", "../Assets/Shaders/frustum.fs"));
+    engine->shader.emplace("model_1", new he::Shader("../Assets/Shaders/test_03.vs", "../Assets/Shaders/test_03.fs"));
+    engine->shader.emplace("model_1_visual", new he::Shader("../Assets/Shaders/test_03_visual.vs", "../Assets/Shaders/test_03_visual.fs", "../Assets/Shaders/test_03_visual.gs"));
+        
+    
+    he::ModelLoader loader; 
+    
+    he::Model bob(engine->shader["model_1"]->GetShader());
+    loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &bob);
+    //bob.SetModelTrans(transformBob);
+    
+    
+    he::Model pyro(engine->shader["model_1"]->GetShader());
+    loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &pyro);
     //test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
     
     //add scale and rotate methods, and then after translation and/or rotation, scale by:
     //glm::vec3(0.07f, 0.07f, 0.07f)
-    
-    /*
-    SDL_Rect cursorRect;
-    cursorRect.x = (this->getSizeX() / 2) - 8;
-    cursorRect.y = (this->getSizeY() / 2) - 8;
-    cursorRect.w = 17;
-    cursorRect.h = 17;
-    
-    SDL_Surface* cursorSurface = IMG_Load("../Assets/Images/cursor_crosshair.png");
-    if(!cursorSurface) {
-        throw std::string("Error loading image: ") + IMG_GetError();
-    }
-    
-    SDL_Texture* cursorTexture = SDL_CreateTextureFromSurface(renderer, cursorSurface);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); //use after SDL_CreateTextureFromSurface to prevent texture bug
-
-    SDL_FreeSurface(cursorSurface);
-    */
-    
     
     std::vector<glm::vec3> pointsPositions;
     std::vector<glm::vec3> pointsColors;
@@ -158,83 +152,15 @@ void App::init()
             }
         }
     }
-    
-    GLfloat colorsz[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-    };
 
-    
-    GLubyte indicesFrustum[] = {1, 0, 4,
-                                1, 4, 5,
-                                1, 5, 6,
-                                1, 6, 2,
-                                2, 6, 3,
-                                3, 6, 7,
-                                3, 7, 4,
-                                3, 0, 4,
-                                /*
-                                0, 1, 2,
-                                0, 2, 3,
-                                4, 5, 6,
-                                4, 6, 7,
-                                */         
-    };
-    
-    GLubyte indicesFrustumOutline[] = {0, 1, 1, 2, 2, 3, 3, 0,
-                                       4, 5, 5, 6, 6, 7, 7, 4,
-                                       0, 4, 1, 5, 2, 6, 3, 7,                    
-    };
-    
-    GLubyte indicesBoundingBoxOutline[] = {0, 1, 1, 5, 5, 4, 4, 0,
-                                           2, 3, 3, 7, 7, 6, 6, 2,
-                                           0, 2, 1, 3, 5, 7, 4, 6,
-    };
-    
-    glUseProgram(engine->shader["frustumShader"]->GetShader());
-    GLuint vao, vbo, vbos;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);  
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &vbos);
-    glBindVertexArray(0);
-    glUseProgram(0);
-
-    glUseProgram(engine->shader["frustumShader"]->GetShader());
+    glUseProgram(engine->shader["frustum_bbox"]->GetShader());
     GLuint vao2, vbo2, vbos2;
     glGenVertexArrays(1, &vao2);
     glBindVertexArray(vao2);
     glGenBuffers(1, &vbo2);
     glGenBuffers(1, &vbos2);
     glBindVertexArray(0);
-    glUseProgram(0);
-    
-    std::cout << "min x: " << loader.getBoundingBoxMin().x << " y: " << loader.getBoundingBoxMin().y << " z: " << loader.getBoundingBoxMin().z << std::endl;
-    std::cout << "max x: " << loader.getBoundingBoxMax().x << " y: " << loader.getBoundingBoxMax().y << " z: " << loader.getBoundingBoxMax().z << std::endl;
-    
-    glm::vec3 boundinxBoxVertices[8];
-    boundinxBoxVertices[0] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMin().z);
-    boundinxBoxVertices[1] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMax().z);
-    boundinxBoxVertices[2] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMin().z);
-    boundinxBoxVertices[3] = glm::vec3(loader.getBoundingBoxMin().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMax().z);
-    boundinxBoxVertices[4] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMin().z);
-    boundinxBoxVertices[5] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMin().y, loader.getBoundingBoxMax().z);
-    boundinxBoxVertices[6] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMin().z);
-    boundinxBoxVertices[7] = glm::vec3(loader.getBoundingBoxMax().x, loader.getBoundingBoxMax().y, loader.getBoundingBoxMax().z);
-    
-    glUseProgram(engine->shader["frustumShader"]->GetShader());
-    GLuint vao3, vbo3, vbos3;
-    glGenVertexArrays(1, &vao3);
-    glBindVertexArray(vao3);
-    glGenBuffers(1, &vbo3);
-    glGenBuffers(1, &vbos3);
-    glBindVertexArray(0);
-    glUseProgram(0);
-
-    
-
-    
-    
-    
+    glUseProgram(0);   
 
     bool toggleMouseRelative = true;
     bool toggleFullscreen = true;
@@ -242,7 +168,7 @@ void App::init()
     bool toggleCamera = true;
 
     float mouseScroll = 0.0;
-    int skip = 0;
+    int skipMouseResolution = 0;
     
     bool running = true;
 
@@ -319,16 +245,19 @@ void App::init()
                             //SDL_SetWindowDisplayMode(window, 0);
 
                             int w, h;
-                            SDL_GetWindowSize(window, &w, &h);
+                            SDL_GetWindowSize(window, &w, &h); //?
+                            
                             this->setSizeX(800);
                             this->setSizeY(600);
+                            
+                            ng::Drawing::SetResolution(800,600);
                             
                             std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
                             
                             toggleFullscreen = true;
                         }
                         
-                        skip = 2;     
+                        skipMouseResolution = 2;     
                     }
                     break;
                     
@@ -343,7 +272,7 @@ void App::init()
                             toggleMouseRelative = true;
                         }
 
-                        skip = 2;
+                        skipMouseResolution = 2;
                     }
                     break;
                     
@@ -373,6 +302,7 @@ void App::init()
                     
                     case SDLK_p:
                         //this->takeScreenshot(0, 0, this->getSizeX(), this->getSizeY());
+                        this->takeScreenshotPNG(0, 0, this->getSizeX(), this->getSizeY());
                     break;
                     
                     case SDLK_ESCAPE:
@@ -403,16 +333,12 @@ void App::init()
             }
         }
         
-        gui.OnEvent(e);
-        
-        
-        
         glViewport(0, 0, this->getSizeX(), this->getSizeY());
         
-        //SDL_RenderSetLogicalSize(renderer, this->getSizeX(), this->getSizeY());
-        
+        engine->gui->OnEvent(e);
+
         SDL_PumpEvents();
-        const Uint8 *state = SDL_GetKeyboardState(NULL);
+        const Uint8* state = SDL_GetKeyboardState(NULL);
         
         if(state[SDL_SCANCODE_W]) {
             engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
@@ -447,11 +373,8 @@ void App::init()
             engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
         }
         
-
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-        
-        
         
         /*
         cursorRect.x = (this->getSizeX() / 2) - 8;
@@ -462,8 +385,8 @@ void App::init()
         int ypos;
         SDL_GetRelativeMouseState(&xpos, &ypos);
 
-        if(skip > 0 && (xpos != 0 || ypos != 0)) {
-            skip--; 
+        if(skipMouseResolution > 0 && (xpos != 0 || ypos != 0)) {
+            skipMouseResolution--; 
         }
         else {
             if(toggleMouseRelative) {
@@ -496,93 +419,49 @@ void App::init()
         glm::mat4 view2 = engine->camera[1]->GetViewMatrix();
         glm::mat4 projection2 = glm::perspective(glm::radians(engine->camera[1]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);   
         
-        
         glm::mat4 model;
         model = glm::translate(model, glm::vec3(0.0, -2.0, -2.0));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(trackbarValue1 * 360), glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.07f, 0.07f, 0.07f));
+        
+        bob.SetTick(this->getTimeElapsed() * trackbarValue2);
+        
+        //works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
+        for(int i = 0; i < bob.GetBoundingBoxVertices().size(); ++i) {
+            glm::vec3 transformedVector = glm::vec3(model * glm::vec4(bob.GetBoundingBoxVertices()[i], 1.0));
             
-        /*
-        glUseProgram(pyroShader.GetShader("pyroShader"));
-        //remove argument [ pyroShader.GetShader(); ] ?
-        pyroShader.InitPyro("pyroShader", this->getTimeElapsed(), camera[0]->GetPosition(), view, projection);
-        pyroModel.Draw(pyroShader.GetShader("pyroShader"));
-        glUseProgram(0);
-        glUseProgram(bobShader.GetShader("bobShader"));
-        bobShader.InitBob("bobShader", this->getTimeElapsed(), camera[0]->GetPosition(), view, projection, 4);
-        bobModel.Draw(bobShader.GetShader("bobShader"));
-        glUseProgram(0);
-        */
+            if(engine->camera[0]->PointInFrustum(transformedVector)) {
+                //std::cout << "vertex: " << i << " " << "in frustum! DRAW" << std::endl;
+                
+                bob.Draw(model, view, projection, engine->shader["model_1"]->GetShader());
+                bob.Draw(model, view, projection, engine->shader["model_1_visual"]->GetShader());
+                
+                break;
+            } else {
+                //std::cout << "vertex: " << i << " " << "out of frustum! DONT DRAW" << std::endl;
+            }
+        }
         
-        /*
-        test.tick(this->getTimeElapsed());
-        glUseProgram(skeletalAnimShaderVisual.GetShader());
-        //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        //test.Draw(model, view, projection);
-        //glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        glUseProgram(0);
+        bob.DrawBoundingBox(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
-        glUseProgram(skeletalAnimShader.GetShader());
-        test.Draw(model, view, projection);
-        glUseProgram(0);
-        */
-
         glm::mat4 model2;
-        model2 = glm::translate(model2, glm::vec3(4.0f, -2.0f, -20.0f));
+        model2 = glm::translate(model2, glm::vec3(4.0f, -2.0f, -2.0f));
         model2 = glm::rotate(model2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
        
-        glUseProgram(skeletalAnimShader.GetShader());
-        //test2.Draw(model2, view, projection);
+        glUseProgram(engine->shader["model_1"]->GetShader());
+        pyro.Draw(model2, view, projection);
         glUseProgram(0);
         
-        glm::mat4 model3;
-        model3 = glm::translate(model3, glm::vec3(0.0f, 0.0f, 0.0f));
-        model3 = glm::rotate(model3, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-
-        glUseProgram(skeletalAnimShader.GetShader());
-        //test2.Draw(model3, view, projection);
-        glUseProgram(0);
+        pyro.DrawBoundingBox(model2, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
         engine->camera[0]->ExtractFrustumPlanes(view, projection);
         engine->camera[1]->ExtractFrustumPlanes(view2, projection2);
         
-        /*
-        if(camera[1]->PointInFrustum(glm::vec3(4.0f, -2.0f, -2.0f))) {
-            std::cout << "intersecting!" << std::endl;
-        } else {
-            std::cout << "out of frustum!" << std::endl;
-        }
-        */
+        //visualize frustum
+        engine->camera[1]->DrawFrustum(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
-        glm::mat4 identityModel;
-        
-        glUseProgram(frustumShader.GetShader());
-        glBindVertexArray(vao);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &engine->camera[1]->m_frustum_vertices, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbos);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(colorsz), colorsz, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        
-        //glUniform3f(glGetUniformLocation(frustumShader.GetShader(), "inColor2"), 0.0, 0.0, 1.0);
- 
-        glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_BYTE, indicesFrustum);
-        glDrawElements(GL_LINES, 24, GL_UNSIGNED_BYTE, indicesFrustumOutline);
-        glBindVertexArray(0);
-        glUseProgram(0);
-        glDisable(GL_BLEND);
-        
+        //draw points to test frustum intersection
         glm::mat4 identityModel2;
         identityModel2 = glm::translate(identityModel2, glm::vec3(0.0f, 0.0f, 0.0f));
         
@@ -596,7 +475,7 @@ void App::init()
             }
         }
         
-        glUseProgram(frustumShader.GetShader());
+        glUseProgram(engine->shader["frustum_bbox"]->GetShader());
         glEnable(GL_PROGRAM_POINT_SIZE);
         glBindVertexArray(vao2);
         
@@ -610,65 +489,19 @@ void App::init()
         glEnableVertexAttribArray(1);    
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
         
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel2));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));        
+        glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel2));
+        glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));        
 
         glDrawArrays(GL_POINTS, 0, pointsPositions.size());
         glBindVertexArray(0);
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
         
-        
-        //works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
-        for(int i = 0; i < 8; ++i) {
-            glm::vec3 transformedVector = glm::vec3(model3 * glm::vec4(glm::vec3(boundinxBoxVertices[i]), 1.0));
-            
-            if(engine->camera[0]->PointInFrustum(transformedVector)) {
-                //std::cout << "vertex: " << i << " " << "in frustum! DRAW" << std::endl;
-                
-                glUseProgram(skeletalAnimShader.GetShader());
-                test2.Draw(model3, view, projection);
-                glUseProgram(0);
-                break;
-            } else {
-                //std::cout << "vertex: " << i << " " << "out of frustum! DONT DRAW" << std::endl;
-            }
-        }
-        
-        glUseProgram(frustumShader.GetShader());
-        glEnable(GL_PROGRAM_POINT_SIZE);
-        glBindVertexArray(vao3);
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbo3);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 8, &boundinxBoxVertices, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbos3);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(colorsz), colorsz, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(model3));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(frustumShader.GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        
-        glDrawArrays(GL_POINTS, 0, 8);
-        //glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_BYTE, indicesFrustum);
-        glDrawElements(GL_LINES, 24, GL_UNSIGNED_BYTE, indicesBoundingBoxOutline);
-        glBindVertexArray(0);
-        glDisable(GL_PROGRAM_POINT_SIZE);
-        glUseProgram(0);
+        engine->gui->Render();
         glDisable(GL_BLEND);
         
-        
-        //SDL_RenderCopy(renderer, cursorTexture, nullptr, &cursorRect);
-        
-        // SDL_RenderPresent(renderer);
-        gui.Render();
         SDL_GL_SwapWindow(window); 
 
         this->showFPS();
@@ -776,3 +609,10 @@ void App::takeScreenshot(int x, int y, int w, int h)
     
     delete [] pixelData;
 }
+
+void App::takeScreenshotPNG(int x, int y, int width, int height)
+{
+
+}
+
+

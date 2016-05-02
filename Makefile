@@ -46,7 +46,7 @@ src/Engine/GUI/libgui.a:
 	+make -C src/Engine/GUI/ sdl_lib
 
 $(exe): $(obj)
-	g++ $^ -o $(exe) $(link) $(arch) -pthread 
+	g++ $^ -o $(exe) $(link) $(arch) -pthread
 #	g++ $^ -Wall -g -o $(exe) $(link) $(arch) -pthread 
 
 $(build)/%.o: %.cpp
