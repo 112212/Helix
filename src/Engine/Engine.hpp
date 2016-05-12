@@ -41,6 +41,7 @@ namespace Helix {
             std::unordered_map<std::string, he::Shader*> shader;
             
             ng::GuiEngine* gui;
+            ng::GuiEngine* designerGui;
             
         private:
             Engine();

@@ -57,7 +57,10 @@ void App::init()
     SDL_GL_MakeCurrent(window, glContext);
     
     glewExperimental = GL_TRUE; 
-    glewInit();
+    GLenum glew = glewInit();
+    if(GLEW_OK != glew) {
+        throw std::string("Failed to initialize GLEW");
+    }
     
     std::cout << "Vendor:     " << glGetString(GL_VENDOR) << std::endl;
     std::cout << "Renderer:   " << glGetString(GL_RENDERER) << std::endl;
@@ -85,49 +88,34 @@ void App::init()
     //engine->Init();
     
     engine->gui = new ng::GuiEngine;
+    engine->designerGui = new ng::GuiEngine;
     ng::XmlLoader::LoadXml(*(engine->gui), "gui.xml");
+    ng::XmlLoader::LoadXml(*(engine->designerGui), "designerGui.xml");
     
     float trackbarValue1 = 0;
-    engine->gui->SubscribeEvent("1", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {  
+    engine->designerGui->SubscribeEvent("1", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {  
         ng::TrackBar* p = (ng::TrackBar*)c;
         trackbarValue1 = p->GetValue() / 100.0;
     });
     
     float trackbarValue2 = 0;
-    engine->gui->SubscribeEvent("2", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {
+    engine->designerGui->SubscribeEvent("2", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {
         ng::TrackBar* p = (ng::TrackBar*)c;
         trackbarValue2 = p->GetValue() / 10.0;
     });
-    
-    /*
-    he::Shader pyroShader("pyroShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
-    he::Shader bobShader("bobShader", "../Assets/Shaders/test_02.vs", "../Assets/Shaders/test_02.fs");
-       
-    he::Model pyroModel("../Assets/Models/Pyro/Pyro.obj");
-    he::Model bobModel("../Assets/Models/guard/boblampclean.md5mesh");
-    */
-    
-    /*
-    he::Shader frustumShader("../Assets/Shaders/frustum.vs", "../Assets/Shaders/frustum.fs");
-    
-    he::Shader skeletalAnimShader("../Assets/Shaders/test_03.vs", "../Assets/Shaders/test_03.fs");
-    he::Shader skeletalAnimShaderVisual("../Assets/Shaders/test_03_visual.vs", "../Assets/Shaders/test_03_visual.fs", "../Assets/Shaders/test_03_visual.gs");
-    */
     
     engine->camera.emplace_back(new he::Camera(glm::vec3(0.0f, 0.0f, 0.0f)));
     engine->camera.emplace_back(new he::Camera(engine->camera[0]->GetPosition()));
 
     engine->shader.emplace("frustum_bbox", new he::Shader("../Assets/Shaders/frustum.vs", "../Assets/Shaders/frustum.fs"));
     engine->shader.emplace("model_1", new he::Shader("../Assets/Shaders/test_03.vs", "../Assets/Shaders/test_03.fs"));
-    engine->shader.emplace("model_1_visual", new he::Shader("../Assets/Shaders/test_03_visual.vs", "../Assets/Shaders/test_03_visual.fs", "../Assets/Shaders/test_03_visual.gs"));
-        
+    engine->shader.emplace("model_1_visual", new he::Shader("../Assets/Shaders/test_03_visual.vs", "../Assets/Shaders/test_03_visual.fs", "../Assets/Shaders/test_03_visual.gs"));  
     
     he::ModelLoader loader; 
     
     he::Model bob(engine->shader["model_1"]->GetShader());
     loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &bob);
     //bob.SetModelTrans(transformBob);
-    
     
     he::Model pyro(engine->shader["model_1"]->GetShader());
     loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &pyro);
@@ -136,26 +124,7 @@ void App::init()
     //add scale and rotate methods, and then after translation and/or rotation, scale by:
     //glm::vec3(0.07f, 0.07f, 0.07f)
     
-    std::vector<glm::vec3> pointsPositions;
-    std::vector<glm::vec3> pointsColors;
-    for(int x = 0; x < 20; ++x) {
-        for(int y = 0; y < 20; ++y) {
-            for(int z = 0; z < 20; ++z) {
-                pointsPositions.push_back(glm::vec3(x, y, z));
-                pointsColors.push_back(glm::vec3(1.0, 0.0, 0.0));
-            }
-        }
-    }
-
-    glUseProgram(engine->shader["frustum_bbox"]->GetShader());
-    GLuint vao2, vbo2, vbos2;
-    glGenVertexArrays(1, &vao2);
-    glBindVertexArray(vao2);
-    glGenBuffers(1, &vbo2);
-    glGenBuffers(1, &vbos2);
-    glBindVertexArray(0);
-    glUseProgram(0);   
-
+    bool designerMode = false;
     bool toggleMouseRelative = false;
     bool toggleFullscreen = true;
     bool toggleWireframe = true;
@@ -264,6 +233,7 @@ void App::init()
                     
                     case SDLK_SPACE:
                     {
+                        /*
                         if(toggleMouseRelative) {
                             SDL_SetRelativeMouseMode(SDL_FALSE);
                             toggleMouseRelative = false;
@@ -274,6 +244,14 @@ void App::init()
                         }
 
                         skipMouseResolution = 2;
+                        */
+                        
+                        if(designerMode) {
+                            designerMode = false;
+                        }
+                        else {
+                            designerMode = true;
+                        }
                     }
                     break;
                     
@@ -351,6 +329,7 @@ void App::init()
         glViewport(0, 0, this->getSizeX(), this->getSizeY());
         
         engine->gui->OnEvent(e);
+        engine->designerGui->OnEvent(e);
 
         SDL_PumpEvents();
         const Uint8* state = SDL_GetKeyboardState(NULL);
@@ -409,6 +388,7 @@ void App::init()
                 }
                 
                 engine->gui->UnselectControl();
+                engine->designerGui->UnselectControl();
             }
             else {
                 int xpos;
@@ -423,8 +403,8 @@ void App::init()
         glm::mat4 projection = glm::perspective(glm::radians(engine->camera[0]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
 
         glm::mat4 view2 = engine->camera[1]->GetViewMatrix();
-        glm::mat4 projection2 = glm::perspective(glm::radians(engine->camera[1]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);   
-        
+        glm::mat4 projection2 = glm::perspective(glm::radians(engine->camera[1]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);
+
         glm::mat4 model;
         model = glm::translate(model, glm::vec3(0.0, -2.0, -2.0));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
@@ -471,6 +451,17 @@ void App::init()
         glm::mat4 identityModel2;
         identityModel2 = glm::translate(identityModel2, glm::vec3(0.0f, 0.0f, 0.0f));
         
+        std::vector<glm::vec3> pointsPositions;
+        std::vector<glm::vec3> pointsColors;
+        for(int x = 0; x < 20; ++x) {
+            for(int y = 0; y < 20; ++y) {
+                for(int z = 0; z < 20; ++z) {
+                    pointsPositions.push_back(glm::vec3(x, y, z));
+                    pointsColors.push_back(glm::vec3(1.0, 0.0, 0.0));
+                }
+            }
+        }
+        
         for(int i = 0; i < pointsPositions.size(); ++i) {
             glm::vec3 transformedVector = glm::vec3(identityModel2 * glm::vec4(glm::vec3(pointsPositions[i]), 1.0));
             
@@ -480,17 +471,22 @@ void App::init()
                 pointsColors[i] = glm::vec3(1.0, 0.0, 0.0);
             }
         }
-        
+
         glUseProgram(engine->shader["frustum_bbox"]->GetShader());
         glEnable(GL_PROGRAM_POINT_SIZE);
-        glBindVertexArray(vao2);
         
-        glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+        GLuint vao_0, vbo_0, vbo_1;
+        glGenVertexArrays(1, &vao_0);
+        glBindVertexArray(vao_0);
+        glGenBuffers(1, &vbo_0);
+        glGenBuffers(1, &vbo_1);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_0);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsPositions.size(), &pointsPositions[0], GL_DYNAMIC_DRAW);
         glEnableVertexAttribArray(0);    
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
         
-        glBindBuffer(GL_ARRAY_BUFFER, vbos2);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_1);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsColors.size(), &pointsColors[0], GL_DYNAMIC_DRAW);
         glEnableVertexAttribArray(1);    
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
@@ -501,10 +497,19 @@ void App::init()
 
         glDrawArrays(GL_POINTS, 0, pointsPositions.size());
         glBindVertexArray(0);
+        
+        glDeleteVertexArrays(1, &vao_0);
+        glDeleteBuffers(1, &vbo_0);
+        glDeleteBuffers(1, &vbo_1);
+        
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
-
+        
         engine->gui->Render();
+        
+        if(designerMode) {
+            engine->designerGui->Render();
+        }
         
         SDL_GL_SwapWindow(window); 
 

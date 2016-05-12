@@ -1,0 +1,6 @@
+<gui>
+    <label rect="650,150,200,100" value="Designer Mode"></label>
+    <trackbar rect="10,10,100,30" id="1" range="0,100" value="0"></trackbar>
+    <trackbar rect="10,50,100,30" id="2" range="0,100" value="10" show_number="false"></trackbar>
+</gui>
+
