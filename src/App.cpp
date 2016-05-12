@@ -77,10 +77,6 @@ void App::init()
     //SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
     //SDL_SetWindowGrab(window, SDL_TRUE);
     //SDL_ShowCursor(SDL_ENABLE);
-
-    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_SetWindowGrab(window, SDL_TRUE);
     
     ng::Drawing::SetResolution(this->getSizeX(), this->getSizeY());
     ng::Drawing::Init();
@@ -101,8 +97,6 @@ void App::init()
     engine->gui->SubscribeEvent("2", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {
         ng::TrackBar* p = (ng::TrackBar*)c;
         trackbarValue2 = p->GetValue() / 10.0;
-        
-        std::cout << "p->GetValue(): " << p->GetValue() << std::endl;
     });
     
     /*
@@ -166,6 +160,13 @@ void App::init()
     bool toggleFullscreen = true;
     bool toggleWireframe = true;
     bool toggleCamera = true;
+    
+    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
+    SDL_SetWindowGrab(window, SDL_TRUE);
+    
+    if(toggleMouseRelative) {
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+    }
 
     float mouseScroll = 0.0;
     int skipMouseResolution = 0;
@@ -331,6 +332,20 @@ void App::init()
                     //ypos = e.motion.y;
                     //std::cout << "x: " << xpos << " y: " << ypos << std::endl;
             }
+            else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT) {
+                SDL_ShowCursor(SDL_DISABLE);
+                SDL_SetRelativeMouseMode(SDL_TRUE);
+                toggleMouseRelative = true;
+
+                skipMouseResolution = 2;
+            }
+            else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_RIGHT) {
+                SDL_ShowCursor(SDL_ENABLE);
+                SDL_SetRelativeMouseMode(SDL_FALSE);
+                toggleMouseRelative = false;
+
+                skipMouseResolution = 2;
+            }
         }
         
         glViewport(0, 0, this->getSizeX(), this->getSizeY());
@@ -376,11 +391,6 @@ void App::init()
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         
-        /*
-        cursorRect.x = (this->getSizeX() / 2) - 8;
-        cursorRect.y = (this->getSizeY() / 2) - 8;
-        */
-        
         int xpos;
         int ypos;
         SDL_GetRelativeMouseState(&xpos, &ypos);
@@ -397,6 +407,8 @@ void App::init()
                     engine->camera[1]->ProcessMouseMovement(xpos, ypos);
                     engine->camera[1]->ProcessMouseScroll(mouseScroll);
                 }
+                
+                engine->gui->UnselectControl();
             }
             else {
                 int xpos;
@@ -404,12 +416,6 @@ void App::init()
                 SDL_GetMouseState(&xpos, &ypos);
                 
                 //std::cout << "x: " << xpos << " y: " << ypos << std::endl;
-                
-                /*
-                std::cout << "cam x: " << camera[0]->GetPosition().x
-                          << " y: " << camera[0]->GetPosition().y
-                          << " z: " << camera[0]->GetPosition().z << std::endl;
-                */
             }
         }
         
@@ -497,10 +503,8 @@ void App::init()
         glBindVertexArray(0);
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
-        
-        glEnable(GL_BLEND);
+
         engine->gui->Render();
-        glDisable(GL_BLEND);
         
         SDL_GL_SwapWindow(window); 
 
