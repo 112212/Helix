@@ -156,7 +156,7 @@ void App::init()
     glBindVertexArray(0);
     glUseProgram(0);   
 
-    bool toggleMouseRelative = true;
+    bool toggleMouseRelative = false;
     bool toggleFullscreen = true;
     bool toggleWireframe = true;
     bool toggleCamera = true;

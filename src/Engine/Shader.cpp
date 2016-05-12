@@ -8,7 +8,10 @@ namespace Helix {
         this->loadShader(vertexShaderFile, fragmentShaderFile, geometryShaderFile);
     }
     
-    Shader::~Shader() {}
+    Shader::~Shader()
+    {
+        glDeleteProgram(m_shaderProgram);
+    }
 
     void Shader::loadShader(std::string vertexShaderFile, std::string fragmentShaderFile, std::string geometryShaderFile)
     {
@@ -20,29 +23,22 @@ namespace Helix {
         GLuint fragmentShader = this->readShader(fragmentShaderFile, GL_FRAGMENT_SHADER);
         
         // linking
-        GLuint shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
+        m_shaderProgram = glCreateProgram();
+        glAttachShader(m_shaderProgram, vertexShader);
         if(geometryShaderFile.length() > 0) {
-            glAttachShader(shaderProgram, geometryShader);
+            glAttachShader(m_shaderProgram, geometryShader);
         }
-        glAttachShader(shaderProgram, fragmentShader);
+        glAttachShader(m_shaderProgram, fragmentShader);
         
-        glLinkProgram(shaderProgram); 
+        glLinkProgram(m_shaderProgram); 
         
-        if(!shaderProgram) {
+        if(!m_shaderProgram) {
             throw std::string("Failed to create shader program");
         }
-
-        // shader was compiled and linked, now add GLuint shaderProgram to std::map ===> should be moved to Game
-        //m_loadedShaders.insert(std::pair<std::string,GLuint>(shaderName, shaderProgram));
         
-        m_shader = shaderProgram;
-        
-        /*
         glDeleteShader(vertexShader);
+        glDeleteShader(geometryShader);
         glDeleteShader(fragmentShader);
-        glDeleteProgram(shaderProgram);
-        */
     }
     
     GLuint Shader::readShader(std::string shaderFile, GLenum shaderType)
@@ -84,7 +80,7 @@ namespace Helix {
     
     void Shader::UseShader()
     {
-        glUseProgram(m_shader);
+        glUseProgram(m_shaderProgram);
     }
     
     void Shader::UnuseShader()
@@ -94,122 +90,7 @@ namespace Helix {
     
     GLuint Shader::GetShader()
     {        
-        return m_shader;
+        return m_shaderProgram;
     }
-    
-    /*
-    void Shader::InitPyro(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
-    {
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        //glEnable(GL_MULTISAMPLE);
-        
-        //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-        
-        //glUseProgram(m_loadedShaders[shaderName]);
-                
-        glm::vec3 lightPos(2.7f, 0.2f, 2.0f);
-        glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
- 
-        float moveX = sin(time) * 0.8f;
-        float moveY = cos(time) * 0.8f;
-        
-        GLint lightPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightPos");
-        GLint viewPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "viewPos");
-        GLint lightColorLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightColor");     
-        GLint timeLoc = glGetUniformLocation(m_loadedShaders[shaderName], "time");
-        
-        glUniform3f(lightPosLoc, lightPos.x * moveX, lightPos.y, lightPos.z * moveY);
-        glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
-        glUniform1f(timeLoc, time);   
-        
-        //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f,  3.0f);
-        glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
-
-        //glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        //glm::mat4 projection = glm::perspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
-        
-        glm::mat4 model;
-        model = glm::translate(model, glm::vec3(posX, posY, posZ));
-        model = glm::rotate(model, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        
-        glm::mat4 mvp = projection * view * model;
-
-        GLint modelLoc = glGetUniformLocation(m_loadedShaders[shaderName], "model");
-        GLint mvpLoc = glGetUniformLocation(m_loadedShaders[shaderName], "mvp");
-        //GLint viewLoc = glGetUniformLocation(m_loadedShaders[shaderName], "view");
-        //GLint projLoc = glGetUniformLocation(m_loadedShaders[shaderName], "projection");
-        
-        //glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        //glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-        
-        //here should go draw
-        
-        //glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        
-        //glUseProgram(0);
-    }
-    
-    void Shader::InitBob(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX, float posY, float posZ)
-    {
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        //glEnable(GL_MULTISAMPLE);
-        
-        //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-        
-        //glUseProgram(m_loadedShaders[shaderName]);
-                
-        glm::vec3 lightPos(2.7f, 0.2f, 2.0f);
-        glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
- 
-        float moveX = sin(time) * 0.8f;
-        float moveY = cos(time) * 0.8f;
-        
-        GLint lightPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightPos");
-        GLint viewPosLoc = glGetUniformLocation(m_loadedShaders[shaderName], "viewPos");
-        GLint lightColorLoc = glGetUniformLocation(m_loadedShaders[shaderName], "lightColor");
-        GLint timeLoc = glGetUniformLocation(m_loadedShaders[shaderName], "time");
-        
-        glUniform3f(lightPosLoc, lightPos.x * moveX, lightPos.y, lightPos.z * moveY);
-        glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
-        glUniform1f(timeLoc, time); 
-        
-        //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f,  3.0f);
-        glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
-
-        //glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        //glm::mat4 projection = glm::perspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
-        
-        glm::mat4 model;
-        model = glm::translate(model, glm::vec3(posX, posY, posZ));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.07f, 0.07f, 0.07f));  
-        
-        glm::mat4 mvp = projection * view * model;
-
-        GLint modelLoc = glGetUniformLocation(m_loadedShaders[shaderName], "model");
-        GLint mvpLoc = glGetUniformLocation(m_loadedShaders[shaderName], "mvp");
-        //GLint viewLoc = glGetUniformLocation(m_loadedShaders[shaderName], "view");
-        //GLint projLoc = glGetUniformLocation(m_loadedShaders[shaderName], "projection");
-        
-        //glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        //glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-        
-        //here should go draw
-        
-        //glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        
-        //glUseProgram(0);
-    }
-    */
 }
 

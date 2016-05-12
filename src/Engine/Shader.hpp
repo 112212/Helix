@@ -4,7 +4,6 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
-//#include <map>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,22 +21,9 @@ namespace Helix {
             void UnuseShader();
             GLuint GetShader();
             
-            //should be moved to game code & merged with model->Draw
-            /*
-            void InitPyro(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX = 0, float posY = -2, float posZ = -2);
-            void InitBob(std::string shaderName, float time, glm::vec3 cameraPos, glm::mat4 view, glm::mat4 projection, float posX = 0, float posY = -2, float posZ = -2);
-            */
-            
         private:
             GLuint readShader(std::string shaderFile, GLenum shaderType);
-            //move m_loadedShaders outside?
-            //std::map<std::string,GLuint> m_loadedShaders;
-            
-            GLuint m_shader;
-            
-            //should be removed (move code to game)
-            glm::mat4 projection;
-            glm::mat4 view;
-            GLint uniform_m_mvp;
+
+            GLuint m_shaderProgram;
     };  
 }

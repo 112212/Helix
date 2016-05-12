@@ -17,8 +17,5 @@ namespace Helix {
         return m_instance;
     }
     
-    void Engine::Init()
-    {
- 
-    }
+    void Engine::Init() { }
 }
