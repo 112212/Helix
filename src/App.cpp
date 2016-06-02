@@ -104,14 +104,14 @@ void App::init()
         trackbarValue2 = p->GetValue() / 10.0;
     });
     
-    engine->camera.emplace_back(new he::Camera(glm::vec3(0.0f, 0.0f, 0.0f)));
+    engine->camera.emplace_back(new he::Camera(glm::vec3(0.0f, 0.0f, 10.0f)));
     engine->camera.emplace_back(new he::Camera(engine->camera[0]->GetPosition()));
 
     engine->shader.emplace("frustum_bbox", new he::Shader("../Assets/Shaders/frustum.vs", "../Assets/Shaders/frustum.fs"));
     engine->shader.emplace("model_1", new he::Shader("../Assets/Shaders/test_03.vs", "../Assets/Shaders/test_03.fs"));
     engine->shader.emplace("model_1_visual", new he::Shader("../Assets/Shaders/test_03_visual.vs", "../Assets/Shaders/test_03_visual.fs", "../Assets/Shaders/test_03_visual.gs"));  
     
-    he::ModelLoader loader; 
+    he::ModelLoader loader;
     
     he::Model bob(engine->shader["model_1"]->GetShader());
     loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &bob);
@@ -120,6 +120,11 @@ void App::init()
     he::Model pyro(engine->shader["model_1"]->GetShader());
     loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &pyro);
     //test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
+    
+    
+    he::Model sponza(engine->shader["model_1"]->GetShader());
+    loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
+    
     
     //add scale and rotate methods, and then after translation and/or rotation, scale by:
     //glm::vec3(0.07f, 0.07f, 0.07f)
@@ -305,19 +310,19 @@ void App::init()
                     break;
                 }
             }
-            else if (e.type == SDL_MOUSEMOTION) {
+            else if(e.type == SDL_MOUSEMOTION) {
                     //xpos = e.motion.x;
                     //ypos = e.motion.y;
                     //std::cout << "x: " << xpos << " y: " << ypos << std::endl;
             }
-            else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT) {
+            else if(e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT) {
                 SDL_ShowCursor(SDL_DISABLE);
                 SDL_SetRelativeMouseMode(SDL_TRUE);
                 toggleMouseRelative = true;
 
                 skipMouseResolution = 2;
             }
-            else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_RIGHT) {
+            else if(e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_RIGHT) {
                 SDL_ShowCursor(SDL_ENABLE);
                 SDL_SetRelativeMouseMode(SDL_FALSE);
                 toggleMouseRelative = false;
@@ -447,6 +452,9 @@ void App::init()
         //visualize frustum
         engine->camera[1]->DrawFrustum(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
+        
+        
+        
         //draw points to test frustum intersection
         glm::mat4 identityModel2;
         identityModel2 = glm::translate(identityModel2, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -504,6 +512,12 @@ void App::init()
         
         glDisable(GL_PROGRAM_POINT_SIZE);
         glUseProgram(0);
+        
+        
+        glUseProgram(engine->shader["model_1"]->GetShader());
+        sponza.Draw(model2, view, projection);
+        glUseProgram(0);
+        
         
         engine->gui->Render();
         

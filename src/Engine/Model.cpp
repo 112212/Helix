@@ -21,6 +21,7 @@ namespace Helix {
             aiProcess_Triangulate |
             aiProcess_OptimizeMeshes |
             aiProcess_JoinIdenticalVertices |
+          //  aiProcess_SplitLargeMeshes |
             //aiProcess_PreTransformVertices |
             aiProcess_LimitBoneWeights |
             //aiProcess_GenNormals |
@@ -134,14 +135,10 @@ namespace Helix {
     // add some error handling (not all models have uvs, etc)
     void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, Model* m)
     {
-        //std::cout << "Processing a mesh: " << mesh->mName.C_Str() << std::endl; //debug
+        //std::cout << "Processing a mesh: " << mesh->mName.C_Str() << std::endl;
         //std::cout << "Has bones? " << mesh->mNumBones << std::endl;
      
         Model::Mesh tempMesh;
-        tempMesh.weights.resize(mesh->mNumVertices);
-            std::fill(tempMesh.weights.begin(), tempMesh.weights.end(), glm::vec4(0.0f));
-        tempMesh.boneID.resize(mesh->mNumVertices);
-            std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::vec4(0.0f));
      
         tempMesh.baseModelMatrix = toMat4(&node->mTransformation);
         if(node->mParent != NULL) {
@@ -190,9 +187,8 @@ namespace Helix {
             tempMesh.indices.push_back(mesh->mFaces[x].mIndices[1]);
             tempMesh.indices.push_back(mesh->mFaces[x].mIndices[2]);
         }
-
+        
         if(scene->HasMaterials()) {
-            // so that we don't have to type out that whole thing every time
             aiMaterial* mat = scene->mMaterials[mesh->mMaterialIndex];
             //std::cout << "Has diffuse texture: " << mat->GetTextureCount(aiTextureType_DIFFUSE) << std::endl;
             //std::cout << "Has specular texture: " << mat->GetTextureCount(aiTextureType_SPECULAR) << std::endl;
@@ -203,8 +199,11 @@ namespace Helix {
                 aiString texturePath;
                 mat->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath);
                 //std::cout << texturePath.C_Str() << std::endl;
-     
+
                 std::string textureFileName = m->rootPath + texturePath.C_Str();
+                
+                //in case some model has path textures\filename.jpg
+                std::replace(textureFileName.begin(), textureFileName.end(), '\\', '/');
                 
                 textureSurface = IMG_Load(textureFileName.c_str());
                 if(!textureSurface) {
@@ -225,6 +224,11 @@ namespace Helix {
         }
 
         if(mesh->HasBones()) {
+            tempMesh.weights.resize(mesh->mNumVertices);
+                std::fill(tempMesh.weights.begin(), tempMesh.weights.end(), glm::vec4(0.0f));
+            tempMesh.boneID.resize(mesh->mNumVertices);
+                std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::vec4(0.0f));
+            
             for(int x = 0; x < mesh->mNumBones; x++) {
                 // bone index, decides what bone we modify
                 unsigned int index = 0;
@@ -269,6 +273,7 @@ namespace Helix {
                
             }
         }
+        
         m->meshes.push_back(tempMesh);
     }
     
@@ -390,9 +395,11 @@ namespace Helix {
         if(!modelLoaded) {
             throw std::string("Please load in a model before initializing buffers.");
         }
+        
+        //std::cout << "meshes.size(): " << meshes.size() << std::endl;
      
         // loop through each mesh and initialize them
-        for(int x = 0; x < meshes.size(); x++) {   
+        for(int x = 0; x < meshes.size(); x++) {
             GLint colorMode;
             if(meshes[x].image->format->BytesPerPixel == 4) {
                 if(meshes[x].image->format->Rmask == 0x000000ff) {
@@ -440,11 +447,27 @@ namespace Helix {
             glGenBuffers(1, &meshes[x].idbo);
             glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * meshes[x].boneID.size(), &meshes[x].boneID[0], GL_STATIC_DRAW);
-     
+            
+            //glEnable(GL_TEXTURE_2D);
             glGenTextures(1, &meshes[x].tex);
             glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
+            
+            bool lock = SDL_MUSTLOCK(meshes[x].image);
+            if(lock) {
+                SDL_LockSurface(meshes[x].image);
+            }
+            
             // or GL_BGR instead of colorMode
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, meshes[x].image->w, meshes[x].image->h, 0, colorMode, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
+            
+            if(lock) {
+                SDL_UnlockSurface(meshes[x].image);
+            }
+            
+            //generate texture, bind and upload via glTexImage2D only on unique, lets say 15 texture files, not on 300+ meshes, which share these 15 textures
+            
+            if(x < 320)
+            glDeleteTextures(1, &meshes[x].tex);
 
             // tex data bound to uniform
             // not needed?
@@ -559,7 +582,7 @@ namespace Helix {
             //glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
             //remove glTexImage2D!
-            //glTexImage2D(GL_TEXTURE_2D, 0, meshes[x].image->format->BytesPerPixel, meshes[x].image->w, meshes[x].image->h, 0, colorMode, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
+            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, meshes[x].image->w, meshes[x].image->h, 0, GL_RGB, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
             glUniform1i(glGetUniformLocation(shader, "texture_diffuse1"), 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
