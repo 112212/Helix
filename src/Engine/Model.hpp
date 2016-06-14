@@ -101,8 +101,8 @@ namespace Helix {
         
         glm::vec3 m_boundingBoxVertices[8];
         
-        glm::vec3 getBoundingBoxMin() const;
-        glm::vec3 getBoundingBoxMax() const;
+        glm::vec3 GetBoundingBoxMin() const;
+        glm::vec3 GetBoundingBoxMax() const;
         
         glm::vec3 m_boundingBoxMin;
         glm::vec3 m_boundingBoxMax;

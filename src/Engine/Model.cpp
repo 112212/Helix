@@ -307,12 +307,12 @@ namespace Helix {
         }
     }
     
-    glm::vec3 Model::getBoundingBoxMin() const
+    glm::vec3 Model::GetBoundingBoxMin() const
     {
         return m_boundingBoxMin;
     }
     
-    glm::vec3 Model::getBoundingBoxMax() const
+    glm::vec3 Model::GetBoundingBoxMax() const
     {
         return m_boundingBoxMax;
     }
@@ -509,14 +509,14 @@ namespace Helix {
             glBindVertexArray(0);
         }
         
-        m_boundingBoxVertices[0] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMin().y, this->getBoundingBoxMin().z);
-        m_boundingBoxVertices[1] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMin().y, this->getBoundingBoxMax().z);
-        m_boundingBoxVertices[2] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMax().y, this->getBoundingBoxMin().z);
-        m_boundingBoxVertices[3] = glm::vec3(this->getBoundingBoxMin().x, this->getBoundingBoxMax().y, this->getBoundingBoxMax().z);
-        m_boundingBoxVertices[4] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMin().y, this->getBoundingBoxMin().z);
-        m_boundingBoxVertices[5] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMin().y, this->getBoundingBoxMax().z);
-        m_boundingBoxVertices[6] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMax().y, this->getBoundingBoxMin().z);
-        m_boundingBoxVertices[7] = glm::vec3(this->getBoundingBoxMax().x, this->getBoundingBoxMax().y, this->getBoundingBoxMax().z);
+        m_boundingBoxVertices[0] = glm::vec3(this->GetBoundingBoxMin().x, this->GetBoundingBoxMin().y, this->GetBoundingBoxMin().z);
+        m_boundingBoxVertices[1] = glm::vec3(this->GetBoundingBoxMin().x, this->GetBoundingBoxMin().y, this->GetBoundingBoxMax().z);
+        m_boundingBoxVertices[2] = glm::vec3(this->GetBoundingBoxMin().x, this->GetBoundingBoxMax().y, this->GetBoundingBoxMin().z);
+        m_boundingBoxVertices[3] = glm::vec3(this->GetBoundingBoxMin().x, this->GetBoundingBoxMax().y, this->GetBoundingBoxMax().z);
+        m_boundingBoxVertices[4] = glm::vec3(this->GetBoundingBoxMax().x, this->GetBoundingBoxMin().y, this->GetBoundingBoxMin().z);
+        m_boundingBoxVertices[5] = glm::vec3(this->GetBoundingBoxMax().x, this->GetBoundingBoxMin().y, this->GetBoundingBoxMax().z);
+        m_boundingBoxVertices[6] = glm::vec3(this->GetBoundingBoxMax().x, this->GetBoundingBoxMax().y, this->GetBoundingBoxMin().z);
+        m_boundingBoxVertices[7] = glm::vec3(this->GetBoundingBoxMax().x, this->GetBoundingBoxMax().y, this->GetBoundingBoxMax().z);
     }
     
     void Model::Draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)

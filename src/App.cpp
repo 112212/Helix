@@ -439,10 +439,6 @@ void App::init()
         glm::mat4 model2;
         model2 = glm::translate(model2, glm::vec3(4.0f, -2.0f, -2.0f));
         model2 = glm::rotate(model2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-       
-        glUseProgram(engine->shader["model_1"]->GetShader());
-        pyro.Draw(model2, view, projection);
-        glUseProgram(0);
         
         pyro.DrawBoundingBox(model2, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
@@ -452,8 +448,14 @@ void App::init()
         //visualize frustum
         engine->camera[1]->DrawFrustum(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
+        glm::vec3 pyroAABBmin = glm::vec3(model2 * glm::vec4(pyro.GetBoundingBoxMin(), 1.0));
+        glm::vec3 pyroAABBmax = glm::vec3(model2 * glm::vec4(pyro.GetBoundingBoxMax(), 1.0));
         
-        
+        if(engine->camera[1]->AABBIntersectsFrustum(pyroAABBmin, pyroAABBmax)) {
+            glUseProgram(engine->shader["model_1"]->GetShader());
+            pyro.Draw(model2, view, projection);
+            glUseProgram(0);
+        }
         
         //draw points to test frustum intersection
         glm::mat4 identityModel2;
@@ -515,7 +517,7 @@ void App::init()
         
         
         glUseProgram(engine->shader["model_1"]->GetShader());
-        sponza.Draw(model2, view, projection);
+        //sponza.Draw(model2, view, projection);
         glUseProgram(0);
         
         
