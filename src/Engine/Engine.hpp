@@ -24,7 +24,6 @@
 
 //gui
 #include "Gui.hpp"
-#include "XmlLoader.hpp"
 #include "Control.hpp"
 #include "controls/TrackBar.hpp"
 #include "common/SDL/Drawing.hpp"

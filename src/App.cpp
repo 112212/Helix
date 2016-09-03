@@ -89,8 +89,14 @@ void App::init()
     
     engine->gui = new ng::GuiEngine;
     engine->designerGui = new ng::GuiEngine;
-    ng::XmlLoader::LoadXml(*(engine->gui), "gui.xml");
-    ng::XmlLoader::LoadXml(*(engine->designerGui), "designerGui.xml");
+    
+    engine->gui->SetDefaultFont("/usr/share/fonts/TTF/DroidSansMono.ttf");
+    engine->designerGui->SetDefaultFont("/usr/share/fonts/TTF/DroidSansMono.ttf");
+    
+    engine->gui->LoadXml("gui.xml");
+    engine->designerGui->LoadXml("designerGui.xml");
+    
+    
     
     float trackbarValue1 = 0;
     engine->designerGui->SubscribeEvent("1", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {  
