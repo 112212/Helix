@@ -1,4 +1,8 @@
 <gui>    
-    <trackbar rect="10,550,100,30" id="1" range="0,100" value="0"></trackbar>
+   
+    <anchor pos="rL+10,B+1h+20">
+		<textbox rect="0,0,200,30" id="terminal" value="" visible="false" /><br/>
+		<trackbar rect="0,0,100,30" id="1" range="0,100" value="15" />
+	</anchor>
 </gui>
 

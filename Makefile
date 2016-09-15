@@ -11,6 +11,7 @@ hpp :=	\
 #		src/Engine/Engine.hpp							\
 		
 cpp := 	\
+		src/Engine/commands/commands.cpp				\
 		src/Main.cpp									\
 		src/App.cpp										\
 		src/Engine/Engine.cpp							\
@@ -37,6 +38,7 @@ make_dirs:
 	@mkdir -p $(build)
 	@mkdir -p $(build)/src/
 	@mkdir -p $(build)/src/Engine/
+	@mkdir -p $(build)/src/Engine/commands
 	@mkdir -p $(build)/src/Engine/Shaders/
 
 clean_gui:

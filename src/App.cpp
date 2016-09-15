@@ -1,5 +1,18 @@
 #include "App.hpp"
 
+#include "Engine/commands/commands.hpp"
+
+#include "controls/TextBox.hpp"
+
+int get_config_value(std::string key) {
+	try {
+		return Command::Get(key);
+	} catch(...) {
+		return 0;
+	}
+}
+
+
 App::App()
 {
     m_sizeX = 800;
@@ -81,21 +94,26 @@ void App::init()
     //SDL_SetWindowGrab(window, SDL_TRUE);
     //SDL_ShowCursor(SDL_ENABLE);
     
-    ng::Drawing::SetResolution(this->getSizeX(), this->getSizeY());
-    ng::Drawing::Init();
+    // ng::Drawing::SetResolution(this->getSizeX(), this->getSizeY());
+    // ng::Drawing::Init();
     
     he::Engine* engine = he::Engine::Instance();
     //engine->Init();
     
-    engine->gui = new ng::GuiEngine;
-    engine->designerGui = new ng::GuiEngine;
+    engine->gui = new ng::GuiEngine(this->getSizeX(), this->getSizeY());
+    engine->designerGui = new ng::GuiEngine(this->getSizeX(), this->getSizeY());
     
+    engine->gui->SetSize(this->getSizeX(), this->getSizeY());
     engine->gui->SetDefaultFont("/usr/share/fonts/TTF/DroidSansMono.ttf");
+    
     engine->designerGui->SetDefaultFont("/usr/share/fonts/TTF/DroidSansMono.ttf");
+    engine->designerGui->SetSize(this->getSizeX(), this->getSizeY());
     
     engine->gui->LoadXml("gui.xml");
     engine->designerGui->LoadXml("designerGui.xml");
     
+    engine->gui->ApplyAnchoring();
+    engine->designerGui->ApplyAnchoring();
     
     
     float trackbarValue1 = 0;
@@ -109,6 +127,17 @@ void App::init()
         ng::TrackBar* p = (ng::TrackBar*)c;
         trackbarValue2 = p->GetValue() / 10.0;
     });
+    
+    auto r = engine->gui->GetControlById("terminal")->GetRect();
+    engine->gui->SubscribeEvent("terminal", ng::TextBox::event::enter, [&](ng::Control *c) {
+		ng::TextBox* t = static_cast<ng::TextBox*>(c);
+		try {
+			Command::Execute(t->GetText());
+		} catch(...) {}
+		t->SetText("");
+		engine->gui->Activate(0);
+		t->SetVisible(false);
+	});
     
     engine->camera.emplace_back(new he::Camera(glm::vec3(0.0f, 0.0f, 10.0f)));
     engine->camera.emplace_back(new he::Camera(engine->camera[0]->GetPosition()));
@@ -124,12 +153,12 @@ void App::init()
     //bob.SetModelTrans(transformBob);
     
     he::Model pyro(engine->shader["model_1"]->GetShader());
-    loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &pyro);
+    // loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &pyro);
     //test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
     
     
     he::Model sponza(engine->shader["model_1"]->GetShader());
-    loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
+    // loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
     
     
     //add scale and rotate methods, and then after translation and/or rotation, scale by:
@@ -152,6 +181,14 @@ void App::init()
     int skipMouseResolution = 0;
     
     bool running = true;
+    
+    Command::AddCommand("zoom", [&](float zoom) -> int {
+		 if(toggleCamera) {
+			engine->camera[0]->ProcessMouseScroll(zoom);
+		} else {
+			engine->camera[1]->ProcessMouseScroll(zoom);
+		}
+	});
 
     while(running)
     {
@@ -164,7 +201,7 @@ void App::init()
             if(e.type == SDL_QUIT) {
                 running = false;
             }
-            else if(e.type == SDL_KEYDOWN) {
+            else if(e.type == SDL_KEYDOWN && !engine->gui->GetActiveControl()) {
                 switch(e.key.keysym.sym)
                 {
                     case SDLK_UP:
@@ -201,6 +238,14 @@ void App::init()
                     }
                     break;
                     
+                    case SDLK_RETURN: {
+						ng::Control* terminal = engine->gui->GetControlById("terminal");
+						terminal->SetVisible(true);
+						engine->gui->Activate(terminal);
+						continue;
+						break;
+                    }
+                    
                     case SDLK_f:
                     {       
                         if(toggleFullscreen) {
@@ -215,7 +260,9 @@ void App::init()
                             this->setSizeX(w);
                             this->setSizeY(h);
                             
-                            ng::Drawing::SetResolution(w,h);
+                            // ng::Drawing::SetResolution(w,h);
+                            engine->gui->SetSize(w,h);
+                            engine->designerGui->SetSize(w,h);
                             
                             std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
                             
@@ -231,7 +278,10 @@ void App::init()
                             this->setSizeX(800);
                             this->setSizeY(600);
                             
-                            ng::Drawing::SetResolution(800,600);
+                            // ng::Drawing::SetResolution(800,600);
+                            
+                            engine->gui->SetSize(w,h);
+                            engine->designerGui->SetSize(w,h);
                             
                             std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
                             
@@ -307,8 +357,8 @@ void App::init()
                 switch(e.wheel.type)
                 {
                 case SDL_MOUSEWHEEL:
-                    mouseScroll = 0;
-                    mouseScroll += e.wheel.y/10.0f;
+                    // mouseScroll = 0;
+                    mouseScroll = e.wheel.y;
                     //mouseScroll += e.wheel.y;
                     break;
 
@@ -335,48 +385,51 @@ void App::init()
 
                 skipMouseResolution = 2;
             }
+            
+            engine->gui->OnEvent(e);
+			engine->designerGui->OnEvent(e);
         }
         
         glViewport(0, 0, this->getSizeX(), this->getSizeY());
         
-        engine->gui->OnEvent(e);
-        engine->designerGui->OnEvent(e);
+        
 
-        SDL_PumpEvents();
+        // SDL_PumpEvents();
         const Uint8* state = SDL_GetKeyboardState(NULL);
         
-        if(state[SDL_SCANCODE_W]) {
-            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
-        }
-        
-        if(state[SDL_SCANCODE_S]) {
-            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
-        }
-        
-        if(state[SDL_SCANCODE_A]) {
-            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
-        }
-        
-        if(state[SDL_SCANCODE_D]) {
-            engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
-        }
-
-        
-        if(state[SDL_SCANCODE_UP]) {
-            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
-        }
-        
-        if(state[SDL_SCANCODE_DOWN]) {
-            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
-        }
-        
-        if(state[SDL_SCANCODE_LEFT]) {
-            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
-        }
-        
-        if(state[SDL_SCANCODE_RIGHT]) {
-            engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
-        }
+        if(!engine->gui->GetActiveControl()) {
+			if(state[SDL_SCANCODE_W]) {
+				engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
+			}
+			
+			if(state[SDL_SCANCODE_S]) {
+				engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
+			}
+			
+			if(state[SDL_SCANCODE_A]) {
+				engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
+			}
+			
+			if(state[SDL_SCANCODE_D]) {
+				engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
+			}
+			
+			if(state[SDL_SCANCODE_UP]) {
+				engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
+			}
+			
+			if(state[SDL_SCANCODE_DOWN]) {
+				engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
+			}
+			
+			if(state[SDL_SCANCODE_LEFT]) {
+				engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
+			}
+			
+			if(state[SDL_SCANCODE_RIGHT]) {
+				engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
+			}
+		}
         
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -397,7 +450,7 @@ void App::init()
                     engine->camera[1]->ProcessMouseMovement(xpos, ypos);
                     engine->camera[1]->ProcessMouseScroll(mouseScroll);
                 }
-                
+                mouseScroll = 0;
                 engine->gui->UnselectControl();
                 engine->designerGui->UnselectControl();
             }
@@ -440,7 +493,8 @@ void App::init()
             }
         }
         
-        bob.DrawBoundingBox(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
+        if(get_config_value("boundingbox"))
+			bob.DrawBoundingBox(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
         glm::mat4 model2;
         model2 = glm::translate(model2, glm::vec3(4.0f, -2.0f, -2.0f));
@@ -452,14 +506,15 @@ void App::init()
         engine->camera[1]->ExtractFrustumPlanes(view2, projection2);
         
         //visualize frustum
-        engine->camera[1]->DrawFrustum(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
+        if(get_config_value("frustum"))
+			engine->camera[1]->DrawFrustum(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
         
         glm::vec3 pyroAABBmin = glm::vec3(model2 * glm::vec4(pyro.GetBoundingBoxMin(), 1.0));
         glm::vec3 pyroAABBmax = glm::vec3(model2 * glm::vec4(pyro.GetBoundingBoxMax(), 1.0));
         
         if(engine->camera[1]->AABBIntersectsFrustum(pyroAABBmin, pyroAABBmax)) {
             glUseProgram(engine->shader["model_1"]->GetShader());
-            pyro.Draw(model2, view, projection);
+            // pyro.Draw(model2, view, projection);
             glUseProgram(0);
         }
         
@@ -488,39 +543,41 @@ void App::init()
             }
         }
 
-        glUseProgram(engine->shader["frustum_bbox"]->GetShader());
-        glEnable(GL_PROGRAM_POINT_SIZE);
-        
-        GLuint vao_0, vbo_0, vbo_1;
-        glGenVertexArrays(1, &vao_0);
-        glBindVertexArray(vao_0);
-        glGenBuffers(1, &vbo_0);
-        glGenBuffers(1, &vbo_1);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_0);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsPositions.size(), &pointsPositions[0], GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(0);    
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_1);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsColors.size(), &pointsColors[0], GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(1);    
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-        
-        glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel2));
-        glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));        
+		// draw frustum and points
+		if(get_config_value("dots")) {
+			glUseProgram(engine->shader["frustum_bbox"]->GetShader());
+			glEnable(GL_PROGRAM_POINT_SIZE);
+			
+			GLuint vao_0, vbo_0, vbo_1;
+			glGenVertexArrays(1, &vao_0);
+			glBindVertexArray(vao_0);
+			glGenBuffers(1, &vbo_0);
+			glGenBuffers(1, &vbo_1);
+			
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_0);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsPositions.size(), &pointsPositions[0], GL_DYNAMIC_DRAW);
+			glEnableVertexAttribArray(0);    
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+			
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_1);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * pointsColors.size(), &pointsColors[0], GL_DYNAMIC_DRAW);
+			glEnableVertexAttribArray(1);    
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+			
+			glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "model"), 1, GL_FALSE, glm::value_ptr(identityModel2));
+			glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "view"), 1, GL_FALSE, glm::value_ptr(view));
+			glUniformMatrix4fv(glGetUniformLocation(engine->shader["frustum_bbox"]->GetShader(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));        
 
-        glDrawArrays(GL_POINTS, 0, pointsPositions.size());
-        glBindVertexArray(0);
-        
-        glDeleteVertexArrays(1, &vao_0);
-        glDeleteBuffers(1, &vbo_0);
-        glDeleteBuffers(1, &vbo_1);
-        
-        glDisable(GL_PROGRAM_POINT_SIZE);
-        glUseProgram(0);
-        
+			glDrawArrays(GL_POINTS, 0, pointsPositions.size());
+			glBindVertexArray(0);
+			
+			glDeleteVertexArrays(1, &vao_0);
+			glDeleteBuffers(1, &vbo_0);
+			glDeleteBuffers(1, &vbo_1);
+			
+			glDisable(GL_PROGRAM_POINT_SIZE);
+			glUseProgram(0);
+        }
         
         glUseProgram(engine->shader["model_1"]->GetShader());
         //sponza.Draw(model2, view, projection);
