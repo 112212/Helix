@@ -3,7 +3,7 @@
 in vec3 position;
 in vec3 normal;
 in vec2 texCoords;
-in ivec4 boneID;
+in vec4 boneID;
 in vec4 weight;
 
 out vec3 FragPos;

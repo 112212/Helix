@@ -29,6 +29,7 @@ struct Model {
 	void SetModelTrans(glm::mat4);
 
 	struct Mesh {
+		Mesh() : image("") {}
 		std::vector<glm::vec3> vertices;
 		std::vector<unsigned int> indices;
 		std::vector<glm::vec2> uvs;
@@ -42,7 +43,7 @@ struct Model {
 		GLint posAttribute, normalAttribute, texAttribute, weightAttribute, boneAttribute;
 		GLuint modelID, viewID, projectionID, boneTransformationID, modelTransformID;
 
-		SDL_Surface* image;
+		std::string image;
 
 		bool hasAnimation;
 	};
@@ -116,6 +117,8 @@ struct Model {
 	void Draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection);
 	void drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader);
 	void DrawBoundingBox(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLuint shader);
+	
+	static std::map<std::string, GLuint> m_textures;
 };
 
 class ModelLoader {
@@ -132,7 +135,9 @@ private:
 	void processAnimations(const aiScene* scene, Model* m);
 
 	SDL_Surface* textureSurface;
+	
 };
 
 glm::mat4 toMat4(aiMatrix4x4* ai);
+
 }

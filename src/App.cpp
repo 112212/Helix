@@ -36,6 +36,7 @@ App::~App() {}
 
 he::Model bob;
 he::Model pyro;
+he::Model sponza;
 bool designerMode = false;
 bool toggleMouseRelative = false;
 bool toggleFullscreen = true;
@@ -44,10 +45,12 @@ bool toggleCamera = true;
 float mouseScroll = 0.0;
 int skipMouseResolution = 0;
 bool running = true;
+he::ModelLoader loader;
+SDL_GLContext glContext;
 
 void App::init() {
 	// SDL_Window* window;
-	SDL_GLContext glContext;
+	
 
 	if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		throw std::string("Failed to initialize SDL: ") + SDL_GetError();
@@ -158,7 +161,7 @@ void App::init() {
 	engine->shader.emplace("model_1", new he::Shader("../Assets/Shaders/test_03.vs", "../Assets/Shaders/test_03.fs"));
 	engine->shader.emplace("model_1_visual", new he::Shader("../Assets/Shaders/test_03_visual.vs", "../Assets/Shaders/test_03_visual.fs", "../Assets/Shaders/test_03_visual.gs"));
 
-	he::ModelLoader loader;
+	
 
 	bob.set_shader(engine->shader["model_1"]->GetShader());
 	loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &bob);
@@ -169,14 +172,13 @@ void App::init() {
 	//test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
 
 
-	// he::Model sponza(engine->shader["model_1"]->GetShader());
-	// loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
+	sponza.set_shader(engine->shader["model_1"]->GetShader());
+	loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
 
 
 	//add scale and rotate methods, and then after translation and/or rotation, scale by:
 	//glm::vec3(0.07f, 0.07f, 0.07f)
 
-	
 
 	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
 	SDL_SetWindowGrab(window, SDL_TRUE);
@@ -194,7 +196,7 @@ void App::init() {
 			engine->camera[1]->ProcessMouseScroll(zoom);
 		}
 	});
-
+	
 
 	
 }
@@ -383,11 +385,8 @@ void App::main_loop() {
 
 		glViewport(0, 0, this->getSizeX(), this->getSizeY());
 
-
-
-		// SDL_PumpEvents();
 		process_input();
-
+		
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
@@ -427,6 +426,7 @@ void App::main_loop() {
 		// model = glm::rotate(model, glm::radians(trackbarValue1 * 360), glm::vec3(0.0f, 0.0f, 1.0f));
 		model = glm::scale(model, glm::vec3(0.07f, 0.07f, 0.07f));
 		
+		
 		bob.SetTick(this->getTimeElapsed());
 
 		//works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
@@ -445,33 +445,33 @@ void App::main_loop() {
 			}
 		}
 
-		if(Command::Get("boundingbox")) {
-			bob.DrawBoundingBox(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
-		}
-
 		glm::mat4 model2;
 		model2 = glm::translate(model2, glm::vec3(4.0f, -2.0f, -2.0f));
 		model2 = glm::rotate(model2, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-		pyro.DrawBoundingBox(model2, view, projection, engine->shader["frustum_bbox"]->GetShader());
+		
+		if(Command::Get("boundingbox")) {
+			bob.DrawBoundingBox(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
+			pyro.DrawBoundingBox(model2, view, projection, engine->shader["frustum_bbox"]->GetShader());
+		}
 
 		engine->camera[0]->ExtractFrustumPlanes(view, projection);
 		engine->camera[1]->ExtractFrustumPlanes(view2, projection2);
 
-		//visualize frustum
+		// visualize frustum
 		if(Command::Get("frustum")) {
 			engine->camera[1]->DrawFrustum(model, view, projection, engine->shader["frustum_bbox"]->GetShader());
 		}
 
+		
 		glm::vec3 pyroAABBmin = glm::vec3(model2 * glm::vec4(pyro.GetBoundingBoxMin(), 1.0));
 		glm::vec3 pyroAABBmax = glm::vec3(model2 * glm::vec4(pyro.GetBoundingBoxMax(), 1.0));
 
 		if(Command::Get("pyro")) {
 			if(engine->camera[1]->AABBIntersectsFrustum(pyroAABBmin, pyroAABBmax)) {
-				// glUseProgram(engine->shader["model_1"]->GetShader());
 				pyro.Draw(model2, view, projection);
-				// glUseProgram(0);
 			}
 		}
+		
 
 		if(Command::Get("dots")) {
 			//draw points to test frustum intersection
@@ -534,9 +534,8 @@ void App::main_loop() {
 		}
 
 		// glUseProgram(engine->shader["model_1"]->GetShader());
-		// sponza.Draw(model2, view, projection);
+		sponza.Draw(model2, view, projection);
 		// glUseProgram(0);
-
 
 		engine->gui->Render();
 

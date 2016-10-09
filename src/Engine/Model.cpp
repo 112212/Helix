@@ -136,12 +136,13 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 	std::cout << "Has bones? " << mesh->mNumBones << std::endl;
 
 	Model::Mesh tempMesh;
-
+	
 	tempMesh.baseModelMatrix = toMat4(&node->mTransformation);
 	if(node->mParent != NULL) {
 		tempMesh.baseModelMatrix = toMat4(&node->mParent->mTransformation) * toMat4(&node->mTransformation);
 	}
 
+	tempMesh.weights.resize(mesh->mNumVertices, glm::vec4(0.0f));
 	// loop through each vertex in the mesh
 	for(unsigned x = 0; x < mesh->mNumVertices; x++) {
 		// load the vertices
@@ -201,14 +202,9 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 
 			//in case some model has path textures\filename.jpg
 			std::replace(textureFileName.begin(), textureFileName.end(), '\\', '/');
-
-			textureSurface = IMG_Load(textureFileName.c_str());
-			if(!textureSurface) {
-				throw std::string("Error loading image: ") + IMG_GetError();
-			}
-
-			tempMesh.image = textureSurface;
-
+			
+			tempMesh.image = textureFileName;
+			tempMesh.tex = 0;
 			// free surface after binding texture to opengl? (cleanup destructor then)
 		}
 	}
@@ -220,8 +216,8 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 	}
 
 	if(mesh->HasBones()) {
-		tempMesh.weights.resize(mesh->mNumVertices);
-		std::fill(tempMesh.weights.begin(), tempMesh.weights.end(), glm::vec4(0.0f));
+		
+		// std::fill(tempMesh.weights.begin(), tempMesh.weights.end(), glm::vec4(0.0f));
 		tempMesh.boneID.resize(mesh->mNumVertices);
 		std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::vec4(0.0f));
 
@@ -408,6 +404,8 @@ GLint get_color_mode(SDL_Surface* surf) {
 	return colorMode;
 }
 
+std::map<std::string, GLuint> Model::m_textures;
+
 void Model::init() {
 	if(!modelLoaded) {
 		throw std::string("Please load in a model before initializing buffers.");
@@ -417,59 +415,66 @@ void Model::init() {
 
 	// loop through each mesh and initialize them
 	for(int x = 0; x < meshes.size(); x++) {
-		GLint colorMode = get_color_mode( meshes[x].image );
+		auto& mesh = meshes[x];
+		glGenVertexArrays(1, &mesh.vao);
+		glBindVertexArray(mesh.vao);
 
-		glGenVertexArrays(1, &meshes[x].vao);
-		glBindVertexArray(meshes[x].vao);
+		glGenBuffers(1, &mesh.vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mesh.vertices.size(), &mesh.vertices[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &meshes[x].vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * meshes[x].vertices.size(), &meshes[x].vertices[0], GL_STATIC_DRAW);
+		glGenBuffers(1, &mesh.nbo);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.nbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mesh.normals.size(), &mesh.normals[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &meshes[x].nbo);
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].nbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * meshes[x].normals.size(), &meshes[x].normals[0], GL_STATIC_DRAW);
-
-		glGenBuffers(1, &meshes[x].ebo);
+		glGenBuffers(1, &mesh.ebo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes[x].ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * meshes[x].indices.size(), &meshes[x].indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh.indices.size(), &meshes[x].indices[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &meshes[x].uvb);
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].uvb);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * meshes[x].uvs.size(), &meshes[x].uvs[0], GL_STATIC_DRAW);
+		glGenBuffers(1, &mesh.uvb);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.uvb);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * mesh.uvs.size(), &mesh.uvs[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &meshes[x].wbo);
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].wbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * meshes[x].weights.size(), &meshes[x].weights[0], GL_STATIC_DRAW);
+		glGenBuffers(1, &mesh.wbo);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.wbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * mesh.weights.size(), &mesh.weights[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &meshes[x].idbo);
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * meshes[x].boneID.size(), &meshes[x].boneID[0], GL_STATIC_DRAW);
+		glGenBuffers(1, &mesh.idbo);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.idbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * mesh.boneID.size(), &mesh.boneID[0], GL_STATIC_DRAW);
 
-		{ // load textures
+		
+		auto it = m_textures.find(mesh.image);
+		if(it == m_textures.end()) { // load textures
+			
+			SDL_Surface* surf = IMG_Load(mesh.image.c_str());
+			if(!surf) {
+				throw std::string("Error loading image: ") + IMG_GetError();
+			}
+				
 			glEnable(GL_TEXTURE_2D);
-			glGenTextures(1, &meshes[x].tex);
-			glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
+			glGenTextures(1, &mesh.tex);
+			glBindTexture(GL_TEXTURE_2D, mesh.tex);
 
-			bool lock = SDL_MUSTLOCK(meshes[x].image);
+			bool lock = SDL_MUSTLOCK(surf);
 			if(lock) {
-				SDL_LockSurface(meshes[x].image);
+				SDL_LockSurface(surf);
 			}
 
 			// or GL_BGR instead of colorMode
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, meshes[x].image->w, meshes[x].image->h, 0, colorMode, GL_UNSIGNED_BYTE, meshes[x].image->pixels);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, get_color_mode(surf), GL_UNSIGNED_BYTE, surf->pixels);
 
 			if(lock) {
-				SDL_UnlockSurface(meshes[x].image);
+				SDL_UnlockSurface(surf);
 			}
-			// glBindTexture(GL_TEXTURE_2D, 0);
-
+			
+			SDL_FreeSurface(surf);
 			//generate texture, bind and upload via glTexImage2D only on unique, lets say 15 texture files, not on 300+ meshes, which share these 15 textures
-
-			// if(x < 320)
-				// glDeleteTextures(1, &meshes[x].tex);
+		} else {
+			mesh.tex = it->second;
 		}
-
+		
+		
 		// tex data bound to uniform
 		// not needed?
 		//glUniform1i(glGetUniformLocation(m_shader, "texture_diffuse"), 0);
@@ -499,8 +504,8 @@ void Model::init() {
 		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
 		meshes[x].boneAttribute = glGetAttribLocation(m_shader, "boneID");
 		glEnableVertexAttribArray(meshes[x].boneAttribute);
-		// glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
-		glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
+		glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+		// glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
 
 		meshes[x].modelID = glGetUniformLocation(m_shader, "model");
 		meshes[x].viewID = glGetUniformLocation(m_shader, "view");
@@ -508,7 +513,6 @@ void Model::init() {
 		
 		meshes[x].boneTransformationID = glGetUniformLocation(m_shader, "boneTransformation");
 		meshes[x].modelTransformID = glGetUniformLocation(m_shader, "modelTransform");
-
 		glBindVertexArray(0);
 	}
 
@@ -535,8 +539,7 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 	if(!modelLoaded) {
 		throw std::string("Model could not be rendered.");
 	}
-
-
+	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 

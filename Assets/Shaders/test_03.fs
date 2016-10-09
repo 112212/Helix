@@ -14,10 +14,9 @@ uniform sampler2D texture_diffuse1;
 
 // uniform float time;
 
+/*
 const float near = 1.0; 
 const float far  = 100.0;
-
-/*
 float LinearizeDepth(float depth) 
 {
 	float z = depth * 2.0 - 1.0; // Back to NDC 
@@ -43,9 +42,7 @@ void main() {
 	vec3 specular = specularStrength * spec * vec3(texture(texture_diffuse1, TexCoords));  
 	
 	
-	// vec3 _color = vec3(texture(texture_diffuse1, TexCoords));
 	vec3 result = (ambient + diffuse + specular);
 	
-	// color = vec4(vec3(0.0f, 1.0f, 1.0f), 1.0f);
 	color = vec4(result, 1.0f);
 }
