@@ -9,7 +9,11 @@ class App {
         App();
         ~App();
         
+		void main_loop();
+		void cleanup();
     private:
+		SDL_Window* window;
+		he::Engine* engine;
         void init();
         void loop(); 
         void showFPS();
@@ -21,6 +25,8 @@ class App {
         double getTimeElapsed() const;
         void takeScreenshot(int x, int y, int w, int h);
         void takeScreenshotPNG(int x, int y, int w, int h);
+        
+        void process_input();
         
         int m_sizeX;
         int m_sizeY;
