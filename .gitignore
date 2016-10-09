@@ -28,3 +28,4 @@
 
 release/Helix
 *.trace
+*.cfg

@@ -644,7 +644,7 @@ void App::takeScreenshotPNG(int x, int y, int width, int height) {
 }
 
 void App::cleanup() {
-	Command::SaveVarariablesToFile("config.cfg");
+	Command::SaveVarariablesToFile("config.cfg", true);
 
 	SDL_DestroyWindow(window);
 
