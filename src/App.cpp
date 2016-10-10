@@ -1,6 +1,7 @@
 #include "App.hpp"
 
 #include "Engine/commands/commands.hpp"
+#include "Engine/commands/bind.hpp"
 
 #include "controls/TextBox.hpp"
 
@@ -12,6 +13,7 @@ int get_config_value(std::string key) {
 	}
 }
 
+Bind bind;
 
 App::App() {
 	m_sizeX = 800;
@@ -40,7 +42,7 @@ he::Model sponza;
 bool designerMode = false;
 bool toggleMouseRelative = false;
 bool toggleFullscreen = true;
-bool toggleWireframe = true;
+bool toggleWireframe = false;
 bool toggleCamera = true;
 float mouseScroll = 0.0;
 int skipMouseResolution = 0;
@@ -173,7 +175,7 @@ void App::init() {
 
 
 	sponza.set_shader(engine->shader["model_1"]->GetShader());
-	loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
+	// loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
 
 
 	//add scale and rotate methods, and then after translation and/or rotation, scale by:
@@ -181,7 +183,7 @@ void App::init() {
 
 
 	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
-	SDL_SetWindowGrab(window, SDL_TRUE);
+	// SDL_SetWindowGrab(window, SDL_TRUE);
 
 	if(toggleMouseRelative) {
 		SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -197,8 +199,99 @@ void App::init() {
 		}
 	});
 	
+	Command::AddCommand("screenshot", [&]{
+		//this->takeScreenshot(0, 0, this->getSizeX(), this->getSizeY());
+		this->takeScreenshotPNG(0, 0, this->getSizeX(), this->getSizeY());
+	});
+	
+	
+	Command::AddCommand("fullscreen", [&]{
+		if(toggleFullscreen) {
+			SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+			//glViewport(0, 0, 1024, 768);
+			//GLint viewport[4];
+			//glGetIntegerv(GL_VIEWPORT, viewport);
+
+			int w, h;
+			SDL_GetWindowSize(window, &w, &h);
+			this->setSizeX(w);
+			this->setSizeY(h);
+
+			// ng::Drawing::SetResolution(w,h);
+			engine->gui->SetSize(w,h);
+			engine->designerGui->SetSize(w,h);
+
+			std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
+
+			toggleFullscreen = false;
+		} else {
+			SDL_SetWindowFullscreen(window, 0);
+			//SDL_SetWindowDisplayMode(window, 0);
+
+			int w, h;
+			SDL_GetWindowSize(window, &w, &h); //?
+
+			this->setSizeX(800);
+			this->setSizeY(600);
+
+			// ng::Drawing::SetResolution(800,600);
+
+			engine->gui->SetSize(w,h);
+			engine->designerGui->SetSize(w,h);
+
+			std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
+
+			toggleFullscreen = true;
+		}
+
+		skipMouseResolution = 2;
+	});
+	
 
 	
+}
+
+COMMAND(void, toggle_wireframe, ()) {
+	(toggleWireframe=!toggleWireframe) ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+COMMAND(void, toggle_camera, ()) {
+	toggleCamera = !toggleCamera;
+}
+
+COMMAND(void, toggle_designer_mode, ()) {
+	designerMode = !designerMode;
+}
+
+COMMAND(void, quit, ()) {
+	running = false;
+}
+
+COMMAND(void, print_modes, ()) {
+	static int display_in_use = 0; /* Only using first display */
+
+	int i, display_mode_count;
+	SDL_DisplayMode mode;
+	Uint32 f;
+
+	SDL_Log("SDL_GetNumVideoDisplays(): %i", SDL_GetNumVideoDisplays());
+
+	display_mode_count = SDL_GetNumDisplayModes(display_in_use);
+	if (display_mode_count < 1) {
+		throw std::string("SDL_GetNumDisplayModes failed ") + SDL_GetError();
+	}
+	SDL_Log("SDL_GetNumDisplayModes: %i", display_mode_count);
+
+	for (i = 0; i < display_mode_count; ++i) {
+		if (SDL_GetDisplayMode(display_in_use, i, &mode) != 0) {
+			throw std::string("SDL_GetDisplayMode failed ") + SDL_GetError();
+		}
+		f = mode.format;
+
+		SDL_Log("Mode %i\tbpp %i\t%s\t%i x %i", i,
+				SDL_BITSPERPIXEL(f), SDL_GetPixelFormatName(f), mode.w, mode.h);
+	}
 }
 
 void App::main_loop() {
@@ -208,41 +301,14 @@ void App::main_loop() {
 		SDL_Event e;
 
 		while(SDL_PollEvent(&e)) {
+			
 			if(e.type == SDL_QUIT) {
 				running = false;
 			} else if(e.type == SDL_KEYDOWN && !engine->gui->GetActiveControl()) {
+				if(bind.OnEvent(e)) {
+					continue;
+				}
 				switch(e.key.keysym.sym) {
-				case SDLK_UP: {
-					//camera[0]->ToggleLockY();
-				}
-				break;
-
-				case SDLK_q: {
-					static int display_in_use = 0; /* Only using first display */
-
-					int i, display_mode_count;
-					SDL_DisplayMode mode;
-					Uint32 f;
-
-					SDL_Log("SDL_GetNumVideoDisplays(): %i", SDL_GetNumVideoDisplays());
-
-					display_mode_count = SDL_GetNumDisplayModes(display_in_use);
-					if (display_mode_count < 1) {
-						throw std::string("SDL_GetNumDisplayModes failed ") + SDL_GetError();
-					}
-					SDL_Log("SDL_GetNumDisplayModes: %i", display_mode_count);
-
-					for (i = 0; i < display_mode_count; ++i) {
-						if (SDL_GetDisplayMode(display_in_use, i, &mode) != 0) {
-							throw std::string("SDL_GetDisplayMode failed ") + SDL_GetError();
-						}
-						f = mode.format;
-
-						SDL_Log("Mode %i\tbpp %i\t%s\t%i x %i", i,
-						        SDL_BITSPERPIXEL(f), SDL_GetPixelFormatName(f), mode.w, mode.h);
-					}
-				}
-				break;
 
 				case SDLK_RETURN: {
 					ng::Control* terminal = engine->gui->GetControlById("terminal");
@@ -252,96 +318,7 @@ void App::main_loop() {
 					break;
 				}
 
-				case SDLK_f: {
-					if(toggleFullscreen) {
-						SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
-						//glViewport(0, 0, 1024, 768);
-						//GLint viewport[4];
-						//glGetIntegerv(GL_VIEWPORT, viewport);
-
-						int w, h;
-						SDL_GetWindowSize(window, &w, &h);
-						this->setSizeX(w);
-						this->setSizeY(h);
-
-						// ng::Drawing::SetResolution(w,h);
-						engine->gui->SetSize(w,h);
-						engine->designerGui->SetSize(w,h);
-
-						std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
-
-						toggleFullscreen = false;
-					} else {
-						SDL_SetWindowFullscreen(window, 0);
-						//SDL_SetWindowDisplayMode(window, 0);
-
-						int w, h;
-						SDL_GetWindowSize(window, &w, &h); //?
-
-						this->setSizeX(800);
-						this->setSizeY(600);
-
-						// ng::Drawing::SetResolution(800,600);
-
-						engine->gui->SetSize(w,h);
-						engine->designerGui->SetSize(w,h);
-
-						std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
-
-						toggleFullscreen = true;
-					}
-
-					skipMouseResolution = 2;
-				}
-				break;
-
-				case SDLK_SPACE: {
-					/*
-					if(toggleMouseRelative) {
-						SDL_SetRelativeMouseMode(SDL_FALSE);
-						toggleMouseRelative = false;
-					}
-					else {
-						SDL_SetRelativeMouseMode(SDL_TRUE);
-						toggleMouseRelative = true;
-					}
-
-					skipMouseResolution = 2;
-					*/
-
-					if(designerMode) {
-						designerMode = false;
-					} else {
-						designerMode = true;
-					}
-				}
-				break;
-
-				case SDLK_e: {
-					if(toggleWireframe) {
-						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-						toggleWireframe = false;
-					} else {
-						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-						toggleWireframe = true;
-					}
-				}
-				break;
-
-				case SDLK_c: {
-					if(toggleCamera) {
-						toggleCamera = false;
-					} else {
-						toggleCamera = true;
-					}
-				}
-				break;
-
-				case SDLK_p:
-					//this->takeScreenshot(0, 0, this->getSizeX(), this->getSizeY());
-					this->takeScreenshotPNG(0, 0, this->getSizeX(), this->getSizeY());
-					break;
 
 				case SDLK_ESCAPE:
 					running = false;
@@ -534,7 +511,7 @@ void App::main_loop() {
 		}
 
 		// glUseProgram(engine->shader["model_1"]->GetShader());
-		sponza.Draw(model2, view, projection);
+		// sponza.Draw(model2, view, projection);
 		// glUseProgram(0);
 
 		engine->gui->Render();
@@ -643,8 +620,9 @@ void App::takeScreenshotPNG(int x, int y, int width, int height) {
 }
 
 void App::cleanup() {
-	Command::SaveVarariablesToFile("config.cfg", true);
-
+	bind.SaveKeys("config.cfg");
+	Command::SaveVarariablesToFile("config.cfg");
+	
 	SDL_DestroyWindow(window);
 
 	SDL_Quit();
@@ -687,4 +665,8 @@ void App::process_input() {
 			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
 		}
 	}
+}
+
+COMMAND(void, set_swap_interval, (int s)) {
+	SDL_GL_SetSwapInterval(s);
 }

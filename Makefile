@@ -12,6 +12,7 @@ hpp :=	\
 		
 cpp := 	\
 		src/Engine/commands/commands.cpp				\
+		src/Engine/commands/bind.cpp				\
 		src/Main.cpp									\
 		src/App.cpp										\
 		src/Engine/Engine.cpp							\

@@ -573,13 +573,13 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 		glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
 
-		// glBindBuffer(GL_ARRAY_BUFFER, meshes[x].vbo);
-		// glEnableVertexAttribArray(meshes[x].posAttribute);
-		// glVertexAttribPointer(meshes[x].posAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].vbo);
+		glEnableVertexAttribArray(meshes[x].posAttribute);
+		glVertexAttribPointer(meshes[x].posAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-		// glBindBuffer(GL_ARRAY_BUFFER, meshes[x].uvb);
-		// glEnableVertexAttribArray(meshes[x].texAttribute);
-		// glVertexAttribPointer(meshes[x].texAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].uvb);
+		glEnableVertexAttribArray(meshes[x].texAttribute);
+		glVertexAttribPointer(meshes[x].texAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
