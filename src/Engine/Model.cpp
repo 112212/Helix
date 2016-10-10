@@ -20,7 +20,7 @@ void ModelLoader::LoadModel(std::string fileName, Model* m) {
 	                       aiProcess_Triangulate |
 	                       aiProcess_OptimizeMeshes |
 	                       aiProcess_JoinIdenticalVertices |
-	                       //  aiProcess_SplitLargeMeshes |
+	                        // aiProcess_SplitLargeMeshes |
 	                       //aiProcess_PreTransformVertices |
 	                       aiProcess_LimitBoneWeights |
 	                       aiProcess_GenNormals |
@@ -105,7 +105,7 @@ void ModelLoader::processAnimations(const aiScene* scene, Model* m) {
 }
 
 void ModelLoader::processNode(const aiScene* scene, aiNode* n, Model* m) {
-	std::cout << "Processing a node: " << n->mName.C_Str() << std::endl; //debug
+	// std::cout << "Processing a node: " << n->mName.C_Str() << std::endl; //debug
 
 	// cycle through each mesh within this node
 	if(n->mNumMeshes > 0) {
@@ -132,8 +132,8 @@ void ModelLoader::processNode(const aiScene* scene, aiNode* n, Model* m) {
 
 // add some error handling (not all models have uvs, etc)
 void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, Model* m) {
-	std::cout << "Processing a mesh: " << mesh->mName.C_Str() << std::endl;
-	std::cout << "Has bones? " << mesh->mNumBones << std::endl;
+	// std::cout << "Processing a mesh: " << mesh->mName.C_Str() << std::endl;
+	// std::cout << "Has bones? " << mesh->mNumBones << std::endl;
 
 	Model::Mesh tempMesh;
 	
@@ -166,6 +166,10 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 			tempUV.x = mesh->mTextureCoords[0][x].x;
 			tempUV.y = mesh->mTextureCoords[0][x].y;
 			tempMesh.uvs.push_back(tempUV);
+		}
+		
+		if(mesh->GetNumUVChannels() > 1) {
+			std::cout << mesh->GetNumUVChannels() << std::endl;
 		}
 
 		// load the normals (if they exist)
@@ -222,42 +226,43 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 		std::fill(tempMesh.boneID.begin(), tempMesh.boneID.end(), glm::vec4(0.0f));
 
 		for(int x = 0; x < mesh->mNumBones; x++) {
+			auto& bone = mesh->mBones[x];
 			// bone index, decides what bone we modify
 			unsigned int index = 0;
 
 			// bone name -> bone index
-			if(m->boneID.find(mesh->mBones[x]->mName.data) == m->boneID.end()) {
+			if(m->boneID.find(bone->mName.data) == m->boneID.end()) {
 				// create a new bone
 				// current index is the new bone
 				index = m->boneID.size();
 			} else {
-				index = m->boneID[mesh->mBones[x]->mName.data];
+				index = m->boneID[bone->mName.data];
 			}
-			m->boneID[mesh->mBones[x]->mName.data] = index;
+			m->boneID[bone->mName.data] = index;
 
 			// loading offset matrices
 			for(int y = 0; y < m->animations[m->currentAnim].channels.size(); y++) {
-				if (m->animations[m->currentAnim].channels[y].name == mesh->mBones[x]->mName.data)
-					m->animations[m->currentAnim].boneOffset[mesh->mBones[x]->mName.data] = toMat4(&mesh->mBones[x]->mOffsetMatrix);
+				if (m->animations[m->currentAnim].channels[y].name == bone->mName.data)
+					m->animations[m->currentAnim].boneOffset[bone->mName.data] = toMat4(&bone->mOffsetMatrix);
 			}
 
 			
-			for(int y = 0; y < mesh->mBones[x]->mNumWeights; y++) {
-				unsigned int vertexID = mesh->mBones[x]->mWeights[y].mVertexId;
+			for(int y = 0; y < bone->mNumWeights; y++) {
+				unsigned int vertexID = bone->mWeights[y].mVertexId;
 				// first we check if the boneid vector has any filled in
 				// if it does then we need to fill the weight vector with the same value
 				if(tempMesh.boneID[vertexID].x == 0) {
 					tempMesh.boneID[vertexID].x = index;
-					tempMesh.weights[vertexID].x = mesh->mBones[x]->mWeights[y].mWeight;
+					tempMesh.weights[vertexID].x = bone->mWeights[y].mWeight;
 				} else if(tempMesh.boneID[vertexID].y == 0) {
 					tempMesh.boneID[vertexID].y = index;
-					tempMesh.weights[vertexID].y = mesh->mBones[x]->mWeights[y].mWeight;
+					tempMesh.weights[vertexID].y = bone->mWeights[y].mWeight;
 				} else if(tempMesh.boneID[vertexID].z == 0) {
 					tempMesh.boneID[vertexID].z = index;
-					tempMesh.weights[vertexID].z = mesh->mBones[x]->mWeights[y].mWeight;
+					tempMesh.weights[vertexID].z = bone->mWeights[y].mWeight;
 				} else if(tempMesh.boneID[vertexID].w == 0) {
 					tempMesh.boneID[vertexID].w = index;
-					tempMesh.weights[vertexID].w = mesh->mBones[x]->mWeights[y].mWeight;
+					tempMesh.weights[vertexID].w = bone->mWeights[y].mWeight;
 				}
 			}
 
@@ -428,8 +433,8 @@ void Model::init() {
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mesh.normals.size(), &mesh.normals[0], GL_STATIC_DRAW);
 
 		glGenBuffers(1, &mesh.ebo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes[x].ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh.indices.size(), &meshes[x].indices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh.indices.size(), &mesh.indices[0], GL_STATIC_DRAW);
 
 		glGenBuffers(1, &mesh.uvb);
 		glBindBuffer(GL_ARRAY_BUFFER, mesh.uvb);
@@ -443,37 +448,37 @@ void Model::init() {
 		glBindBuffer(GL_ARRAY_BUFFER, mesh.idbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * mesh.boneID.size(), &mesh.boneID[0], GL_STATIC_DRAW);
 
-		
-		auto it = m_textures.find(mesh.image);
-		if(it == m_textures.end()) { // load textures
-			
-			SDL_Surface* surf = IMG_Load(mesh.image.c_str());
-			if(!surf) {
-				throw std::string("Error loading image: ") + IMG_GetError();
-			}
+		if(!mesh.image.empty()) {
+			auto it = m_textures.find(mesh.image);
+			if(it == m_textures.end()) { // load textures
 				
-			glEnable(GL_TEXTURE_2D);
-			glGenTextures(1, &mesh.tex);
-			glBindTexture(GL_TEXTURE_2D, mesh.tex);
+				SDL_Surface* surf = IMG_Load(mesh.image.c_str());
+				if(!surf) {
+					throw std::string("Error loading image: ") + mesh.image + IMG_GetError();
+				}
+					
+				glEnable(GL_TEXTURE_2D);
+				glGenTextures(1, &mesh.tex);
+				glBindTexture(GL_TEXTURE_2D, mesh.tex);
 
-			bool lock = SDL_MUSTLOCK(surf);
-			if(lock) {
-				SDL_LockSurface(surf);
+				bool lock = SDL_MUSTLOCK(surf);
+				if(lock) {
+					SDL_LockSurface(surf);
+				}
+
+				// or GL_BGR instead of colorMode
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, get_color_mode(surf), GL_UNSIGNED_BYTE, surf->pixels);
+
+				if(lock) {
+					SDL_UnlockSurface(surf);
+				}
+				
+				SDL_FreeSurface(surf);
+				//generate texture, bind and upload via glTexImage2D only on unique, lets say 15 texture files, not on 300+ meshes, which share these 15 textures
+			} else {
+				mesh.tex = it->second;
 			}
-
-			// or GL_BGR instead of colorMode
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, get_color_mode(surf), GL_UNSIGNED_BYTE, surf->pixels);
-
-			if(lock) {
-				SDL_UnlockSurface(surf);
-			}
-			
-			SDL_FreeSurface(surf);
-			//generate texture, bind and upload via glTexImage2D only on unique, lets say 15 texture files, not on 300+ meshes, which share these 15 textures
-		} else {
-			mesh.tex = it->second;
 		}
-		
 		
 		// tex data bound to uniform
 		// not needed?
@@ -545,24 +550,20 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 
 	glUseProgram(shader);
 	for(int x = 0; x < meshes.size(); x++) {
-		glBindVertexArray(meshes[x].vao);
+		auto &mesh = meshes[x];
+		
+		glBindVertexArray(mesh.vao);
 
-		// &meshes[x].baseModelMatrix[0][0]
-		glUniformMatrix4fv(meshes[x].modelID, 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(meshes[x].viewID, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(meshes[x].projectionID, 1, GL_FALSE, glm::value_ptr(projection));
+		// &mesh.baseModelMatrix[0][0]
+		glUniformMatrix4fv(mesh.modelID, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(mesh.viewID, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(mesh.projectionID, 1, GL_FALSE, glm::value_ptr(projection));
 
-		// clean hasAnimation
-		//GLint hasAnimation = glGetUniformLocation(m_shader, "hasAnimation");
-		if(meshes[x].hasAnimation) {
-			glUniformMatrix4fv(meshes[x].boneTransformationID, animations[currentAnim].boneTrans.size(), GL_FALSE, (GLfloat*)&animations[currentAnim].boneTrans[0][0]);
-			glUniformMatrix4fv(meshes[x].modelTransformID, 1, GL_FALSE, (GLfloat*)&modelTrans[0][0]);
+		if(mesh.hasAnimation) {
+			glUniformMatrix4fv(mesh.boneTransformationID, animations[currentAnim].boneTrans.size(), GL_FALSE, (GLfloat*)&animations[currentAnim].boneTrans[0][0]);
+			glUniformMatrix4fv(mesh.modelTransformID, 1, GL_FALSE, (GLfloat*)&modelTrans[0][0]);
 
-			// glUniform1i(hasAnimation, true);
 		}
-		//else {
-			// glUniform1i(hasAnimation, false);
-		//}
 
 		glm::vec3 lightPos(2.7f, 0.2f, 2.0f);
 		glm::vec3 lightColor(1.0f, 5.0f, 1.0f);
@@ -573,25 +574,25 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 		glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 		glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
 
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].vbo);
-		glEnableVertexAttribArray(meshes[x].posAttribute);
-		glVertexAttribPointer(meshes[x].posAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+		glEnableVertexAttribArray(mesh.posAttribute);
+		glVertexAttribPointer(mesh.posAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].uvb);
-		glEnableVertexAttribArray(meshes[x].texAttribute);
-		glVertexAttribPointer(meshes[x].texAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh.uvb);
+		glEnableVertexAttribArray(mesh.texAttribute);
+		glVertexAttribPointer(mesh.texAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, meshes[x].tex);
+		glBindTexture(GL_TEXTURE_2D, mesh.tex);
 		glUniform1i(glGetUniformLocation(shader, "texture_diffuse1"), 0);
 		
 		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glDrawElements(GL_TRIANGLES, meshes[x].indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
 	}
 	glBindVertexArray(0);
 

@@ -38,13 +38,15 @@ void main() {
 		BoneTransform     += boneTransformation[int(boneID[2])] * weight[2];
 		BoneTransform     += boneTransformation[int(boneID[3])] * weight[3];
 
-		PosL = model * BoneTransform * vec4(position, 1.0);
+		PosL = modelTransform * BoneTransform * vec4(position, 1.0);
 	}
 	else { //0.0 means no weight exists, do not use bones
 		PosL = vec4(position, 1.0);
 	}
 		
 	gl_Position = PosL;
+	
+	// gl_Position = projection * view * model * PosL;
 	
 	Normal = mat3(transpose(inverse(model))) * normal;
 	// Normal = normal;

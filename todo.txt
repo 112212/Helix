@@ -1,0 +1,14 @@
+TODO:
+	+ fix drawing normals
+	+ bind sys add mouse scroll binds
+	+ show fps
+	- terminal with completion
+	- culling
+	- cleanup model class and model loader
+	+ make sponza work
+	+ make sponza work correctly
+	- add texture masking, to make sponza work completely
+	- add bump mapping
+	- model editable chunk (like rotate cannon), and test it with blender test model
+	- test some skeleton model with blender
+	

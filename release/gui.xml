@@ -1,5 +1,7 @@
 <gui>    
-   
+	<anchor pos="R,T">
+		<label id="fps" rect="0,0,100,50" value="fps" font="default,12"/>
+	</anchor>
     <anchor pos="rL+10,B+1h+20">
 		<textbox rect="0,0,200,30" id="terminal" value="" visible="false" /><br/>
 		<trackbar rect="0,0,100,30" id="1" range="0,100" value="15" />

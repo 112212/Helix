@@ -7,8 +7,7 @@ link := $(link64bit) -Lsrc/Engine/GUI -lgui
 
 arch := 
 
-hpp :=	\
-#		src/Engine/Engine.hpp							\
+hpp :=
 		
 cpp := 	\
 		src/Engine/commands/commands.cpp				\

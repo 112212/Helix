@@ -4,6 +4,7 @@
 #include "Engine/commands/bind.hpp"
 
 #include "controls/TextBox.hpp"
+#include "controls/Label.hpp"
 
 int get_config_value(std::string key) {
 	try {
@@ -35,7 +36,7 @@ App::App() {
 
 App::~App() {}
 
-
+ng::Label *fps;
 he::Model bob;
 he::Model pyro;
 he::Model sponza;
@@ -127,6 +128,8 @@ void App::init() {
 
 		engine->gui->LoadXml("gui.xml");
 		engine->designerGui->LoadXml("designerGui.xml");
+		
+		fps = (ng::Label*)engine->gui->GetControlById("fps");
 
 		engine->gui->ApplyAnchoring();
 		engine->designerGui->ApplyAnchoring();
@@ -175,7 +178,8 @@ void App::init() {
 
 
 	sponza.set_shader(engine->shader["model_1"]->GetShader());
-	// loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
+	loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
+	// loader.LoadModel("../Assets/Models/wtf/wtf.obj", &sponza);
 
 
 	//add scale and rotate methods, and then after translation and/or rotation, scale by:
@@ -200,8 +204,8 @@ void App::init() {
 	});
 	
 	Command::AddCommand("screenshot", [&]{
-		//this->takeScreenshot(0, 0, this->getSizeX(), this->getSizeY());
-		this->takeScreenshotPNG(0, 0, this->getSizeX(), this->getSizeY());
+		this->takeScreenshot(0, 0, this->getSizeX(), this->getSizeY());
+		// this->takeScreenshotPNG(0, 0, this->getSizeX(), this->getSizeY());
 	});
 	
 	
@@ -218,11 +222,10 @@ void App::init() {
 			this->setSizeX(w);
 			this->setSizeY(h);
 
-			// ng::Drawing::SetResolution(w,h);
 			engine->gui->SetSize(w,h);
 			engine->designerGui->SetSize(w,h);
 
-			std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
+			std::cout << "switching to: " << this->getSizeX() << "x" << this->getSizeY() << std::endl;
 
 			toggleFullscreen = false;
 		} else {
@@ -235,12 +238,10 @@ void App::init() {
 			this->setSizeX(800);
 			this->setSizeY(600);
 
-			// ng::Drawing::SetResolution(800,600);
-
 			engine->gui->SetSize(w,h);
 			engine->designerGui->SetSize(w,h);
 
-			std::cout << this->getSizeX() << "x" << this->getSizeY() << std::endl;
+			std::cout << "switching to: " << this->getSizeX() << "x" << this->getSizeY() << std::endl;
 
 			toggleFullscreen = true;
 		}
@@ -301,59 +302,50 @@ void App::main_loop() {
 		SDL_Event e;
 
 		while(SDL_PollEvent(&e)) {
-			
-			if(e.type == SDL_QUIT) {
-				running = false;
-			} else if(e.type == SDL_KEYDOWN && !engine->gui->GetActiveControl()) {
+			if(!engine->gui->GetActiveControl()) {
 				if(bind.OnEvent(e)) {
 					continue;
 				}
-				switch(e.key.keysym.sym) {
-
-				case SDLK_RETURN: {
-					ng::Control* terminal = engine->gui->GetControlById("terminal");
-					terminal->SetVisible(true);
-					engine->gui->Activate(terminal);
-					continue;
-					break;
-				}
-
-
-
-				case SDLK_ESCAPE:
+				if(e.type == SDL_QUIT) {
 					running = false;
-					break;
+				} else if(e.type == SDL_KEYDOWN) {
+					
+					switch(e.key.keysym.sym) {
 
-				default:
-					break;
+					case SDLK_RETURN: {
+						ng::Control* terminal = engine->gui->GetControlById("terminal");
+						terminal->SetVisible(true);
+						engine->gui->Activate(terminal);
+						continue;
+						break;
+					}
+
+
+
+					case SDLK_ESCAPE:
+						running = false;
+						break;
+
+					default:
+						break;
+					}
+				} else if(e.type == SDL_MOUSEMOTION) {
+					//xpos = e.motion.x;
+					//ypos = e.motion.y;
+					//std::cout << "x: " << xpos << " y: " << ypos << std::endl;
+				} else if(e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT) {
+					SDL_ShowCursor(SDL_DISABLE);
+					SDL_SetRelativeMouseMode(SDL_TRUE);
+					toggleMouseRelative = true;
+
+					skipMouseResolution = 5;
+				} else if(e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_RIGHT) {
+					SDL_ShowCursor(SDL_ENABLE);
+					SDL_SetRelativeMouseMode(SDL_FALSE);
+					toggleMouseRelative = false;
+
+					skipMouseResolution = 5;
 				}
-			} else if(e.type == SDL_MOUSEWHEEL) {
-				switch(e.wheel.type) {
-				case SDL_MOUSEWHEEL:
-					// mouseScroll = 0;
-					mouseScroll = e.wheel.y;
-					//mouseScroll += e.wheel.y;
-					break;
-
-				default:
-					break;
-				}
-			} else if(e.type == SDL_MOUSEMOTION) {
-				//xpos = e.motion.x;
-				//ypos = e.motion.y;
-				//std::cout << "x: " << xpos << " y: " << ypos << std::endl;
-			} else if(e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_RIGHT) {
-				SDL_ShowCursor(SDL_DISABLE);
-				SDL_SetRelativeMouseMode(SDL_TRUE);
-				toggleMouseRelative = true;
-
-				skipMouseResolution = 2;
-			} else if(e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_RIGHT) {
-				SDL_ShowCursor(SDL_ENABLE);
-				SDL_SetRelativeMouseMode(SDL_FALSE);
-				toggleMouseRelative = false;
-
-				skipMouseResolution = 2;
 			}
 
 			engine->gui->OnEvent(e);
@@ -393,9 +385,10 @@ void App::main_loop() {
 		}
 
 		glm::mat4 view = engine->camera[0]->GetViewMatrix();
-		glm::mat4 projection = glm::perspective(glm::radians(engine->camera[0]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
+		// glm::mat4 projection = glm::perspective(glm::radians(engine->camera[0]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
+		glm::mat4 projection = glm::tweakedInfinitePerspective(glm::radians(engine->camera[0]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.5f);
 		glm::mat4 view2 = engine->camera[1]->GetViewMatrix();
-		glm::mat4 projection2 = glm::perspective(glm::radians(engine->camera[1]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 100.0f);
+		glm::mat4 projection2 = glm::perspective(glm::radians(engine->camera[1]->GetZoom()), this->getSizeX()/(float)this->getSizeY(), 0.1f, 1000.0f);
 
 		glm::mat4 model;
 		model = glm::translate(model, glm::vec3(0.0, -2.0, -2.0));
@@ -410,11 +403,12 @@ void App::main_loop() {
 		for(int i = 0; i < bob.GetBoundingBoxVertices().size(); ++i) {
 			glm::vec3 transformedVector = glm::vec3(model * glm::vec4(bob.GetBoundingBoxVertices()[i], 1.0));
 
-			if(engine->camera[0]->PointInFrustum(transformedVector)) {
+			if(true || engine->camera[0]->PointInFrustum(transformedVector)) {
 				// std::cout << "vertex: " << i << " " << "in frustum! DRAW" << std::endl;
 
 				bob.Draw(model, view, projection, engine->shader["model_1"]->GetShader());
-				bob.Draw(model, view, projection, engine->shader["model_1_visual"]->GetShader());
+				if(Command::Get("normals"))
+					bob.Draw(model, view, projection, engine->shader["model_1_visual"]->GetShader());
 
 				break;
 			} else {
@@ -446,6 +440,8 @@ void App::main_loop() {
 		if(Command::Get("pyro")) {
 			if(engine->camera[1]->AABBIntersectsFrustum(pyroAABBmin, pyroAABBmax)) {
 				pyro.Draw(model2, view, projection);
+				if(Command::Get("normals"))
+					pyro.Draw(model2, view, projection, engine->shader["model_1_visual"]->GetShader());
 			}
 		}
 		
@@ -511,10 +507,13 @@ void App::main_loop() {
 		}
 
 		// glUseProgram(engine->shader["model_1"]->GetShader());
-		// sponza.Draw(model2, view, projection);
+		if(Command::Get("sponza"))
+			sponza.Draw(model2, view, projection);
 		// glUseProgram(0);
 
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		engine->gui->Render();
+		toggleWireframe ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		if(designerMode) {
 			engine->designerGui->Render();
@@ -522,7 +521,8 @@ void App::main_loop() {
 
 		SDL_GL_SwapWindow(window);
 
-		// this->showFPS();
+		this->showFPS();
+		fps->SetText(std::to_string(m_frames_current));
 
 		//SDL_Delay(16);
 	}
@@ -552,7 +552,7 @@ void App::showFPS() {
 			m_frames_current = 1;
 		}
 
-		std::cout << "FPS: " << m_frames_current << std::endl;
+		// std::cout << "FPS: " << m_frames_current << std::endl;
 	}
 }
 
@@ -628,41 +628,48 @@ void App::cleanup() {
 	SDL_Quit();
 }
 
+
+double speed = 2.0;
+
+COMMAND(void, setspeed, (double s)) {
+	speed = s;
+}
+
 void App::process_input() {
 
 	const Uint8* state = SDL_GetKeyboardState(NULL);
 	he::Engine* engine = he::Engine::Instance();
 	if(!engine->gui->GetActiveControl()) {
 		if(state[SDL_SCANCODE_W]) {
-			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
+			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * speed);
 		}
 
 		if(state[SDL_SCANCODE_S]) {
-			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
+			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * speed);
 		}
 
 		if(state[SDL_SCANCODE_A]) {
-			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
+			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * speed);
 		}
 
 		if(state[SDL_SCANCODE_D]) {
-			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
+			engine->camera[0]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * speed);
 		}
 
 		if(state[SDL_SCANCODE_UP]) {
-			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * 2.0);
+			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::FORWARD, this->getDeltaTime() * speed);
 		}
 
 		if(state[SDL_SCANCODE_DOWN]) {
-			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * 2.0);
+			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::BACKWARD, this->getDeltaTime() * speed);
 		}
 
 		if(state[SDL_SCANCODE_LEFT]) {
-			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * 2.0);
+			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::LEFT, this->getDeltaTime() * speed);
 		}
 
 		if(state[SDL_SCANCODE_RIGHT]) {
-			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * 2.0);
+			engine->camera[1]->ProcessKeyboard(he::Camera::MoveDirection::RIGHT, this->getDeltaTime() * speed);
 		}
 	}
 }
