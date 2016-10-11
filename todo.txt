@@ -11,4 +11,4 @@ TODO:
 	- add bump mapping
 	- model editable chunk (like rotate cannon), and test it with blender test model
 	- test some skeleton model with blender
-	
+	- billinear filter

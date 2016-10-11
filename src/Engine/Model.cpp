@@ -467,8 +467,9 @@ void Model::init() {
 				}
 
 				// or GL_BGR instead of colorMode
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, get_color_mode(surf), GL_UNSIGNED_BYTE, surf->pixels);
-
+				// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, get_color_mode(surf), GL_UNSIGNED_BYTE, surf->pixels);
+				gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, surf->w, surf->h, get_color_mode(surf), GL_UNSIGNED_BYTE, surf->pixels);
+				
 				if(lock) {
 					SDL_UnlockSurface(surf);
 				}
@@ -545,6 +546,7 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 		throw std::string("Model could not be rendered.");
 	}
 	
+	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
@@ -587,15 +589,21 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 		glUniform1i(glGetUniformLocation(shader, "texture_diffuse1"), 0);
 		
 		
+		// FAIL
 		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_MIPMAP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_MIPMAP);
 
 		glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
 	}
 	glBindVertexArray(0);
 
+	glDisable(GL_MULTISAMPLE);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
