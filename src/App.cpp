@@ -40,6 +40,7 @@ ng::Label *fps;
 he::Model bob;
 he::Model pyro;
 he::Model sponza;
+he::Model t90;
 bool designerMode = false;
 bool toggleMouseRelative = false;
 bool toggleFullscreen = true;
@@ -140,13 +141,13 @@ void App::init() {
 
 
 		float trackbarValue1 = 0;
-		engine->designerGui->SubscribeEvent("1", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {
+		engine->designerGui->SubscribeEvent("1", ng::TrackBar::event::change, [&](ng::Control *c) {
 			ng::TrackBar* p = (ng::TrackBar*)c;
 			trackbarValue1 = p->GetValue() / 100.0;
 		});
 
 		float trackbarValue2 = 0;
-		engine->designerGui->SubscribeEvent("2", ng::EVENT_TRACKBAR_CHANGE, [&](ng::Control *c) {
+		engine->designerGui->SubscribeEvent("2", ng::TrackBar::event::change, [&](ng::Control *c) {
 			ng::TrackBar* p = (ng::TrackBar*)c;
 			trackbarValue2 = p->GetValue() / 10.0;
 		});
@@ -184,8 +185,9 @@ void App::init() {
 	sponza.set_shader(engine->shader["model_1"]->GetShader());
 	loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
 	// loader.LoadModel("../Assets/Models/wtf/wtf.obj", &sponza);
-
-
+	
+	t90.set_shader(engine->shader["model_1"]->GetShader());
+	loader.LoadModel("../Assets/Models/T-90/T-90.dae", &t90);
 	//add scale and rotate methods, and then after translation and/or rotation, scale by:
 	//glm::vec3(0.07f, 0.07f, 0.07f)
 
@@ -402,6 +404,11 @@ void App::main_loop() {
 		
 		
 		bob.SetTick(this->getTimeElapsed());
+		
+		glm::mat4 model3;
+		model3 = glm::translate(model3, glm::vec3(10,10,10));
+		model3 = glm::scale(model3, glm::vec3(0.1));
+		t90.Draw(model3, view, projection, engine->shader["model_1"]->GetShader());
 
 		//works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
 		for(int i = 0; i < bob.GetBoundingBoxVertices().size(); ++i) {

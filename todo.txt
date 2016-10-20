@@ -3,12 +3,26 @@ TODO:
 	+ bind sys add mouse scroll binds
 	+ show fps
 	- terminal with completion
-	- culling
 	- cleanup model class and model loader
+	- add assets system
 	+ make sponza work
 	+ make sponza work correctly
+textures:
 	- add texture masking, to make sponza work completely
 	- add bump mapping
+	- add specular mapping
+model:
 	- model editable chunk (like rotate cannon), and test it with blender test model
 	- test some skeleton model with blender
-	- billinear filter
+camera:
+	- billinear filter (maybe framebuffer)
+	- octree
+	- culling
+		- view frustum culling
+		- occlusion culling
+	- shadows
+	- lights
+	- particles
+	
+model plan:
+	select mesh name 

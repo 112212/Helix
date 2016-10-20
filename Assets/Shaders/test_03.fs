@@ -11,6 +11,7 @@ uniform vec3 lightColor;
 uniform vec3 viewPos;
 
 uniform sampler2D texture_diffuse1;
+uniform sampler2D normal_map;
 
 // uniform float time;
 

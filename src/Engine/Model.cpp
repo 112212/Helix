@@ -1,5 +1,5 @@
 #include "Model.hpp"
-
+using std::cout;
 namespace Helix {
 ModelLoader::ModelLoader() {}
 
@@ -191,7 +191,13 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 	}
 
 	if(scene->HasMaterials()) {
+		
+			
 		aiMaterial* mat = scene->mMaterials[mesh->mMaterialIndex];
+		for(int i=0; i < mat->mNumProperties; i++) {
+			aiMaterialProperty* p = mat->mProperties[i];
+			cout << i << ". " << p->mKey.C_Str() << " : " << ((p->mType == aiPTI_String) ? std::string(p->mData, p->mDataLength) : "") << "\n";
+		}
 		//std::cout << "Has diffuse texture: " << mat->GetTextureCount(aiTextureType_DIFFUSE) << std::endl;
 		//std::cout << "Has specular texture: " << mat->GetTextureCount(aiTextureType_SPECULAR) << std::endl;
 
@@ -199,6 +205,10 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 		// so it holds all textures withing different models
 		if(mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 			aiString texturePath;
+			for(int i=0; i < mat->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+				mat->GetTexture(aiTextureType_DIFFUSE, i, &texturePath);
+				std::cout << "tex: " << texturePath.C_Str() << "\n";
+			}
 			mat->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath);
 			//std::cout << texturePath.C_Str() << std::endl;
 
@@ -209,7 +219,50 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 			
 			tempMesh.image = textureFileName;
 			tempMesh.tex = 0;
-			// free surface after binding texture to opengl? (cleanup destructor then)
+	
+		
+		
+		}
+		if(mat->GetTextureCount(aiTextureType_NORMALS)) {
+			cout << "normal map\n";
+			
+		}
+		if(mat->GetTextureCount(aiTextureType_REFLECTION)) {
+			cout << "reflection\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_SPECULAR)) {
+			cout << "specular\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_DISPLACEMENT)) {
+			cout << "displacement\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_LIGHTMAP)) {
+			cout << "lightmap\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_HEIGHT)) {
+			cout << "heightmap\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_EMISSIVE )) {
+			cout << "emissive\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_NONE   )) {
+			cout << "none\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_AMBIENT   )) {
+			cout << "ambient\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_OPACITY  )) {
+			cout << "opacity\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_SHININESS  )) {
+			cout << "shininess\n";
+		}
+		if(mat->GetTextureCount(aiTextureType_UNKNOWN  )) {
+			cout << "unknown\n";
+		}
+		{
+			cout << "none " << mat->mNumProperties << "\n";
+			
 		}
 	}
 
