@@ -205,11 +205,15 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 		// so it holds all textures withing different models
 		if(mat->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 			aiString texturePath;
+			cout << "num diffuse texes: " << mat->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
+			
 			for(int i=0; i < mat->GetTextureCount(aiTextureType_DIFFUSE); i++) {
 				mat->GetTexture(aiTextureType_DIFFUSE, i, &texturePath);
-				std::cout << "tex: " << texturePath.C_Str() << "\n";
+				std::cout << "diffuse: " << texturePath.C_Str() << "\n";
 			}
-			mat->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath);
+			
+			mat->GetTexture(aiTextureType_DIFFUSE, 1, &texturePath);
+			
 			//std::cout << texturePath.C_Str() << std::endl;
 
 			std::string textureFileName = m->rootPath + texturePath.C_Str();
@@ -223,6 +227,8 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 		
 		
 		}
+		
+		/*
 		if(mat->GetTextureCount(aiTextureType_NORMALS)) {
 			cout << "normal map\n";
 			
@@ -241,6 +247,12 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 		}
 		if(mat->GetTextureCount(aiTextureType_HEIGHT)) {
 			cout << "heightmap\n";
+			aiString texturePath;
+			cout << "num heightmaps: " << mat->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
+			for(int i=0; i < mat->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+				mat->GetTexture(aiTextureType_HEIGHT, i, &texturePath);
+				std::cout << "height: " << texturePath.C_Str() << "\n";
+			}
 		}
 		if(mat->GetTextureCount(aiTextureType_EMISSIVE )) {
 			cout << "emissive\n";
@@ -250,6 +262,12 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 		}
 		if(mat->GetTextureCount(aiTextureType_AMBIENT   )) {
 			cout << "ambient\n";
+			aiString texturePath;
+			cout << "num ambient maps: " << mat->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
+			for(int i=0; i < mat->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+				mat->GetTexture(aiTextureType_AMBIENT, i, &texturePath);
+				std::cout << "ambient: " << texturePath.C_Str() << "\n";
+			}
 		}
 		if(mat->GetTextureCount(aiTextureType_OPACITY  )) {
 			cout << "opacity\n";
@@ -264,6 +282,7 @@ void ModelLoader::processMesh(const aiScene* scene, aiNode* node, aiMesh* mesh, 
 			cout << "none " << mat->mNumProperties << "\n";
 			
 		}
+		*/
 	}
 
 	if(scene->HasAnimations()) {
@@ -506,6 +525,7 @@ void Model::init() {
 			if(it == m_textures.end()) { // load textures
 				
 				SDL_Surface* surf = IMG_Load(mesh.image.c_str());
+				
 				if(!surf) {
 					throw std::string("Error loading image: ") + mesh.image + IMG_GetError();
 				}
@@ -513,6 +533,8 @@ void Model::init() {
 				glEnable(GL_TEXTURE_2D);
 				glGenTextures(1, &mesh.tex);
 				glBindTexture(GL_TEXTURE_2D, mesh.tex);
+				
+				m_textures[mesh.image] = mesh.tex;
 
 				bool lock = SDL_MUSTLOCK(surf);
 				if(lock) {
@@ -555,16 +577,20 @@ void Model::init() {
 		glEnableVertexAttribArray(meshes[x].texAttribute);
 		glVertexAttribPointer(meshes[x].texAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].wbo);
-		meshes[x].weightAttribute = glGetAttribLocation(m_shader, "weight");
-		glEnableVertexAttribArray(meshes[x].weightAttribute);
-		glVertexAttribPointer(meshes[x].weightAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
-		meshes[x].boneAttribute = glGetAttribLocation(m_shader, "boneID");
-		glEnableVertexAttribArray(meshes[x].boneAttribute);
-		glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
-		// glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
+		// if(meshes[x].weights.empty() != 0) {
+			glBindBuffer(GL_ARRAY_BUFFER, meshes[x].wbo);
+			meshes[x].weightAttribute = glGetAttribLocation(m_shader, "weight");
+			glEnableVertexAttribArray(meshes[x].weightAttribute);
+			glVertexAttribPointer(meshes[x].weightAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+		// }
+		
+		// if(meshes[x].boneID.empty() != 0) {
+			glBindBuffer(GL_ARRAY_BUFFER, meshes[x].idbo);
+			meshes[x].boneAttribute = glGetAttribLocation(m_shader, "boneID");
+			glEnableVertexAttribArray(meshes[x].boneAttribute);
+			glVertexAttribPointer(meshes[x].boneAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+			// glVertexAttribIPointer(meshes[x].boneAttribute, 4, GL_INT, 0, 0);
+		// }
 
 		meshes[x].modelID = glGetUniformLocation(m_shader, "model");
 		meshes[x].viewID = glGetUniformLocation(m_shader, "view");
@@ -599,7 +625,7 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 		throw std::string("Model could not be rendered.");
 	}
 	
-	glEnable(GL_MULTISAMPLE);
+	// glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
@@ -617,7 +643,6 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 		if(mesh.hasAnimation) {
 			glUniformMatrix4fv(mesh.boneTransformationID, animations[currentAnim].boneTrans.size(), GL_FALSE, (GLfloat*)&animations[currentAnim].boneTrans[0][0]);
 			glUniformMatrix4fv(mesh.modelTransformID, 1, GL_FALSE, (GLfloat*)&modelTrans[0][0]);
-
 		}
 
 		glm::vec3 lightPos(2.7f, 0.2f, 2.0f);
@@ -651,12 +676,16 @@ void Model::drawModel(glm::mat4 model, glm::mat4 view, glm::mat4 projection, GLu
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_MIPMAP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_MIPMAP);
+		
+		// cout << "before draw\n";
 
 		glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+		
+		// cout << "after draw\n";
 	}
 	glBindVertexArray(0);
 
-	glDisable(GL_MULTISAMPLE);
+	// glDisable(GL_MULTISAMPLE);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 

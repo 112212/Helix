@@ -41,6 +41,7 @@ he::Model bob;
 he::Model pyro;
 he::Model sponza;
 he::Model t90;
+he::Model tempest;
 bool designerMode = false;
 bool toggleMouseRelative = false;
 bool toggleFullscreen = true;
@@ -70,8 +71,8 @@ void App::init() {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
 	// MSAA
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	// SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	// SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
@@ -173,23 +174,7 @@ void App::init() {
 
 	
 
-	bob.set_shader(engine->shader["model_1"]->GetShader());
-	loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &bob);
-	//bob.SetModelTrans(transformBob);
-
-	pyro.set_shader(engine->shader["model_1"]->GetShader());
-	loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &pyro);
-	//test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
-
-
-	sponza.set_shader(engine->shader["model_1"]->GetShader());
-	loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
-	// loader.LoadModel("../Assets/Models/wtf/wtf.obj", &sponza);
 	
-	t90.set_shader(engine->shader["model_1"]->GetShader());
-	loader.LoadModel("../Assets/Models/T-90/T-90.dae", &t90);
-	//add scale and rotate methods, and then after translation and/or rotation, scale by:
-	//glm::vec3(0.07f, 0.07f, 0.07f)
 
 
 	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
@@ -255,8 +240,27 @@ void App::init() {
 		skipMouseResolution = 2;
 	});
 	
+	bob.set_shader(engine->shader["model_1"]->GetShader());
+	loader.LoadModel("../Assets/Models/guard/boblampclean.md5mesh", &bob);
+	//bob.SetModelTrans(transformBob);
 
+	pyro.set_shader(engine->shader["model_1"]->GetShader());
+	loader.LoadModel("../Assets/Models/Pyro/Pyro.obj", &pyro);
+	//test2.SetModelTrans(glm::translate(test2.modelTrans, glm::vec3(0.0, -2.0, -2.0)));
+
+	if(Command::Get("sponza")) {
+		sponza.set_shader(engine->shader["model_1"]->GetShader());
+		loader.LoadModel("../Assets/Models/crytek-sponza/sponza.obj", &sponza);
+		// loader.LoadModel("../Assets/Models/wtf/wtf.obj", &sponza);
+	}
 	
+	t90.set_shader(engine->shader["model_1"]->GetShader());
+	loader.LoadModel("../Assets/Models/T-90/T-90.dae", &t90);
+	//add scale and rotate methods, and then after translation and/or rotation, scale by:
+	//glm::vec3(0.07f, 0.07f, 0.07f)
+	
+	tempest.set_shader(engine->shader["model_1"]->GetShader());
+	loader.LoadModel("../Assets/Models/tempest/tempest_1st_gen.obj", &tempest);
 }
 
 COMMAND(void, toggle_wireframe, ()) {
@@ -409,6 +413,11 @@ void App::main_loop() {
 		model3 = glm::translate(model3, glm::vec3(10,10,10));
 		model3 = glm::scale(model3, glm::vec3(0.1));
 		t90.Draw(model3, view, projection, engine->shader["model_1"]->GetShader());
+		
+		glm::mat4 model4;
+		model4 = glm::translate(model4, glm::vec3(50,400,50));
+		model4 = glm::scale(model4, glm::vec3(100.0));
+		tempest.Draw(model4, view, projection, engine->shader["model_1"]->GetShader());
 
 		//works fine, but will bug due to AABB, what if camera is too close, looking at the model but doesnt see AABB vertices
 		for(int i = 0; i < bob.GetBoundingBoxVertices().size(); ++i) {
